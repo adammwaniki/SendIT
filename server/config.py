@@ -29,3 +29,8 @@ api = Api(app)
 
 # Instantiate CORS
 CORS(app)
+
+# creates all database tables
+@app.before_first_request
+def create_tables():
+    db.create_all()
