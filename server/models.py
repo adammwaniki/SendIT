@@ -25,7 +25,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(DateTime, server_default=func.current_timestamp())
     updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
-# making a separate roles table to handle user roles instead of adding it as a column to prevent
+# Best practice invloves making a separate roles table to handle user roles instead of adding it as a column to prevent
 # creation of a one-to-many relationship between users and roles, where each user can have multiple roles associated with them
 class Role(db.Model, RoleMixin):
     __tablename__ = 'roles'
