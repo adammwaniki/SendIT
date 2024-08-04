@@ -1,4 +1,4 @@
-# create_roles.py
+# /server/create_roles.py
 from app import Role, User, db
 
 def create_roles():

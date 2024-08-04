@@ -1,3 +1,5 @@
+# /server/config.py
+
 # Standard library imports
 
 # Remote library imports
@@ -12,7 +14,10 @@ from sqlalchemy import MetaData
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@localhost:port/sendit"
+# In production it is preferable to use a fixed and securely generated secret key instead of a random one each time the server restarts.
+# app.config['SECRET_KEY'] = os.urandom(24) 
+app.config['SECRET_KEY'] = 'Y\xf1Xz\x00\xad|eQ\x80t \xca\x1a\x10K'
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@localhost:5555/sendit"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -31,6 +36,6 @@ api = Api(app)
 CORS(app)
 
 # creates all database tables
-@app.before_first_request
+"""@app.before_first_request
 def create_tables():
-    db.create_all()
+    db.create_all()"""
