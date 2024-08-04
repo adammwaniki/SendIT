@@ -12,7 +12,7 @@ from sqlalchemy import MetaData
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@localhost:port/sendit"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -29,3 +29,8 @@ api = Api(app)
 
 # Instantiate CORS
 CORS(app)
+
+# creates all database tables
+@app.before_first_request
+def create_tables():
+    db.create_all()
