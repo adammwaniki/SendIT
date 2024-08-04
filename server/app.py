@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+# /server/app.py
+
 # Standard library imports
 
 # Remote library imports
 from flask import request, render_template, redirect, url_for
 from flask_restful import Resource
+
 
 # Local imports
 from config import app, db, api
