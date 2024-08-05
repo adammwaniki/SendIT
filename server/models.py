@@ -12,7 +12,7 @@ roles_users = db.Table('roles_users',
     db.Column('role_id', db.Integer(), db.ForeignKey('roles.id'))
 )
 
-class User(db.Model, UserMixin):
+class User(db.Model, UserMixin, SerializerMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(130), nullable=False)
@@ -30,19 +30,23 @@ class User(db.Model, UserMixin):
     user_address = db.relationship('UserAddress', back_populates='user') # One-to-one relationship with user addresses
     billing_address = db.relationship('BillingAddress', back_populates='user') # One-to-one relationship with billing addresses
 
+    serialize_rules = ('-roles.users', '-parcels.user', '-user_address.user', '-billing_address.user') # Avoid recursion
+
     def __repr__(self):
         return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}')>"
 
-class Role(db.Model, RoleMixin):
+class Role(db.Model, RoleMixin, SerializerMixin):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
     users = db.relationship('User', secondary=roles_users, back_populates='roles') # Many-to-many relationship with users
 
+    serialize_rules = ('-users.roles',) # Avoiding recursion
+
     def __repr__(self):
         return f"<Role(id={self.id}, name='{self.name}')>"
 
-class Recipient(db.Model):
+class Recipient(db.Model, SerializerMixin):
     __tablename__ = 'recipients'
     id = db.Column(db.Integer, primary_key=True)
     recipient_full_name = db.Column(db.String(130), nullable=False)
@@ -55,10 +59,12 @@ class Recipient(db.Model):
     parcels = db.relationship('Parcel', back_populates='recipient', cascade='all, delete-orphan') # One-to-many relationship with parcels
     delivery_address = db.relationship('RecipientAddress', back_populates='recipient') # One-to-one relationship with delivery addresses
 
+    serialize_rules = ('-parcels.recipient', '-delivery_address.recipient') # Avoiding recursion
+
     def __repr__(self):
         return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
 
-class Parcel(db.Model):
+class Parcel(db.Model, SerializerMixin):
     __tablename__ = 'parcels'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
@@ -74,10 +80,12 @@ class Parcel(db.Model):
     user = db.relationship('User', back_populates='parcels') # Many-to-one relationship with users
     recipient = db.relationship('Recipient', back_populates='parcels') # Many-to-one relationship with recipients
 
+    serialize_rules = ('-user.parcels', '-recipient.parcels') # Avoiding recursion
+
     def __repr__(self):
         return f"<Parcel(id={self.id}, length={self.length}, width={self.width}, height={self.height}, weight={self.weight})>"
 
-class UserAddress(db.Model):
+class UserAddress(db.Model, SerializerMixin):
     __tablename__ = 'user_addresses'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
@@ -93,10 +101,12 @@ class UserAddress(db.Model):
 
     user = db.relationship('User', back_populates='user_address') # One-to-one relationship with users
 
+    serialize_rules = ('-user.user_address',) # Avoiding recursion
+
     def __repr__(self):
         return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
-class RecipientAddress(db.Model):
+class RecipientAddress(db.Model, SerializerMixin):
     __tablename__ = 'recipient_addresses'
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id')) # Foreign Key to the recipients
@@ -112,13 +122,15 @@ class RecipientAddress(db.Model):
 
     recipient = db.relationship('Recipient', back_populates='delivery_address') # One-to-one relationship with recipients
 
+    serialize_rules = ('-recipient.delivery_address',) # Avoiding recursion
+
     def __repr__(self):
         return f"<RecipientAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
-class BillingAddress(db.Model):
+class BillingAddress(db.Model, SerializerMixin):
     __tablename__ = 'billing_addresses'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users since they're the ones being billed
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
     street = db.Column(db.String(255))
     city = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(100))
@@ -131,8 +143,7 @@ class BillingAddress(db.Model):
 
     user = db.relationship('User', back_populates='billing_address') # One-to-one relationship with users
 
+    serialize_rules = ('-user.billing_address',) # Avoiding recursion
+
     def __repr__(self):
         return f"<BillingAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
-
-
-
