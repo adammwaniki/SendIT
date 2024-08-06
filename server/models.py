@@ -15,7 +15,9 @@ roles_users = db.Table('roles_users',
 )
 
 class User(db.Model, UserMixin, SerializerMixin):
+
     __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the user
     first_name = db.Column(db.String(130), nullable=False)  # User's first name
     last_name = db.Column(db.String(130), nullable=False)  # User's last name
@@ -56,7 +58,7 @@ class Role(db.Model, RoleMixin, SerializerMixin):
     # Serialization rule to prevent circular references
     serialize_rules = ('-users.roles',)
 
-    def __repr__(self):
+    def _repr_(self):
         return f"<Role(id={self.id}, name='{self.name}')>"
 
 class Recipient(db.Model, SerializerMixin):
@@ -80,7 +82,7 @@ class Recipient(db.Model, SerializerMixin):
         return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
 
 class Parcel(db.Model, SerializerMixin):
-    __tablename__ = 'parcels'
+    _tablename_ = 'parcels'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
     recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id')) # Foreign Key to the recipients
@@ -126,7 +128,7 @@ class UserAddress(db.Model, SerializerMixin):
         return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
 class RecipientAddress(db.Model, SerializerMixin):
-    __tablename__ = 'recipient_addresses'
+    _tablename_ = 'recipient_addresses'
     id = db.Column(db.Integer, primary_key=True)
     street = db.Column(db.String(255))
     city = db.Column(db.String(100), nullable=False)
@@ -165,6 +167,7 @@ class BillingAddress(db.Model, SerializerMixin):
 
     # Updated serialization rules
     serialize_rules = ('-user.billing_address',)
+
 
     def __repr__(self):
         return f"<BillingAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
