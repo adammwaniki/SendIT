@@ -19,11 +19,6 @@ migrate = Migrate(app, db)
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'  # Redirect to login page if unauthorized
-
-# Initialize Flask-Security
-user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
-security = Security(app, user_datastore)
 
 @login_manager.user_loader
 def load_user(user_id):

@@ -1,11 +1,19 @@
-#!/usr/bin/env python3
+# Made changes to schema so not entirely applicable anymore
+# TO DO: Update seed to reflect schema changes
+'''#!/usr/bin/env python3
 
-from your_flask_app import create_app, db
-from sqlalchemy import text
+# Standard library imports
+from random import randint, choice as rc
 
-app = create_app()
+# Remote library imports
+from faker import Faker
 
-def seed_data():
+# Local imports
+from app import app
+from models import db
+
+if __name__ == '__main__':
+    fake = Faker()
     with app.app_context():
         # Connect to the database
         with db.engine.connect() as connection:
@@ -82,4 +90,6 @@ def seed_data():
 
 if __name__ == "__main__":
     seed_data()
+
+'''
 
