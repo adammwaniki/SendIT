@@ -15,7 +15,9 @@ roles_users = db.Table('roles_users',
 )
 
 class User(db.Model, UserMixin, SerializerMixin):
-    _tablename_ = 'users'
+
+    __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the user
     first_name = db.Column(db.String(130), nullable=False)  # User's first name
     last_name = db.Column(db.String(130), nullable=False)  # User's last name
@@ -37,14 +39,17 @@ class User(db.Model, UserMixin, SerializerMixin):
     # Many-to-many relationship with parcels
     parcels = db.relationship('Parcel', back_populates='user')
 
+    # Required by Flask-Security and Flask-Login for compatibility
+    active = db.Column(db.Boolean(), default=True)  
+
     # Serialization rules to prevent circular references
     serialize_rules = ('-roles.users', '-user_address.user', '-billing_address.user', '-parcels.user')
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}')>"
 
 class Role(db.Model, RoleMixin, SerializerMixin):
-    _tablename_ = 'roles'
+    __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the role
     name = db.Column(db.String(80), unique=True)  # Role name, must be unique
     # Many-to-many relationship with users
@@ -57,7 +62,7 @@ class Role(db.Model, RoleMixin, SerializerMixin):
         return f"<Role(id={self.id}, name='{self.name}')>"
 
 class Recipient(db.Model, SerializerMixin):
-    _tablename_ = 'recipients'
+    __tablename__ = 'recipients'
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the recipient
     recipient_full_name = db.Column(db.String(130), nullable=False)  # Full name of the recipient
     phone_number = db.Column(db.String(50), nullable=False)  # Phone number of the recipient
@@ -73,7 +78,7 @@ class Recipient(db.Model, SerializerMixin):
     # Serialization rule to prevent circular references
     serialize_rules = ('-delivery_address.recipients', '-parcels.recipient')
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
 
 class Parcel(db.Model, SerializerMixin):
@@ -97,11 +102,11 @@ class Parcel(db.Model, SerializerMixin):
 
     serialize_rules = ('-user.parcels', '-recipient.parcels') # Avoiding recursion
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<Parcel(id={self.id}, length={self.length}, width={self.width}, height={self.height}, weight={self.weight}, tracking_number='{self.tracking_number}')>"
 
 class UserAddress(db.Model, SerializerMixin):
-    _tablename_ = 'user_addresses'
+    __tablename__ = 'user_addresses'
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the user address
     street = db.Column(db.String(255))  # Street address
     city = db.Column(db.String(100), nullable=False)  # City
@@ -119,7 +124,7 @@ class UserAddress(db.Model, SerializerMixin):
     # Updated serialization rules
     serialize_rules = ('-user.user_address',)
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
 class RecipientAddress(db.Model, SerializerMixin):
@@ -141,11 +146,11 @@ class RecipientAddress(db.Model, SerializerMixin):
     # Updated serialization rules
     serialize_rules = ('-recipient.delivery_address',)
     
-    def _repr_(self):
+    def __repr__(self):
         return f"<RecipientAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
 class BillingAddress(db.Model, SerializerMixin):
-    _tablename_ = 'billing_addresses'
+    __tablename__ = 'billing_addresses'
     id = db.Column(db.Integer, primary_key=True)  # Primary key for the billing address
     street = db.Column(db.String(255))  # Street address
     city = db.Column(db.String(100), nullable=False)  # City
@@ -163,5 +168,6 @@ class BillingAddress(db.Model, SerializerMixin):
     # Updated serialization rules
     serialize_rules = ('-user.billing_address',)
 
-    def _repr_(self):
+
+    def __repr__(self):
         return f"<BillingAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"

@@ -2,7 +2,9 @@
 # /server/app.py
 
 # Remote library imports
-from flask import request, make_response, jsonify, redirect, url_for
+
+from flask import request, make_response, jsonify, redirect, url_for, session
+
 from flask_restful import Api, Resource
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_security import Security, SQLAlchemySessionUserDatastore, UserDatastore
@@ -29,13 +31,25 @@ security = Security(app, user_datastore)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-'''
+
 @app.before_request
 def check_if_logged_in():
     whitelist = ['index', 'signup', 'login', 'check_session', 'clear']
-    if request.endpoint not in whitelist and not current_user.is_authenticated:
+    if request.endpoint not in whitelist and 'user_id' not in session:
         return make_response(jsonify({"message": "Unauthorized access"}), 401)
+    
 '''
+class SecureResource(Resource):
+    @login_required
+    def get(self):
+        # Some secure resource that is only accessible if user is logged in 
+        # I could use this for the admin panel
+        return {"message": "You are logged in!"}, 200
+
+api.add_resource(SecureResource, '/secure')
+'''
+
+
 
 @app.route('/')
 def index():
@@ -44,6 +58,12 @@ def index():
 class Signup(Resource):
     def post(self):
         data = request.get_json()
+
+
+        # Making sure the user fills in all the fields
+        if not all(k in data for k in ('first_name', 'last_name', 'email', 'password')):
+            return {"message": "Missing required fields"}, 400
+
 
         # Check if the email already exists
         existing_user = User.query.filter_by(email=data['email']).first()
@@ -61,9 +81,18 @@ class Signup(Resource):
         db.session.add(new_user)
         db.session.commit()
 
+
+        # Log in the new user and set the session
+        login_user(new_user)
+        session['user_id'] = new_user.id  # Set user ID in the session
+
+
         return {"message": "User created successfully", "user": new_user.to_dict()}, 201
 
 api.add_resource(Signup, '/signup', endpoint='signup')
+
+
+
 
 class Login(Resource):
     def post(self):
@@ -72,6 +101,9 @@ class Login(Resource):
         
         if user and check_password_hash(user.password, data['password']):
             login_user(user)
+
+            session['user_id'] = user.id  # Set user ID in the session
+
             return {"message": "Login successful"}, 200
         
         return {"message": "Invalid credentials"}, 401
@@ -81,6 +113,8 @@ api.add_resource(Login, '/login', endpoint='login')
 class Logout(Resource):
     def delete(self):
         logout_user()
+        session.pop('user_id', None)  # Remove user ID from session
+
         return {}, 204
     
 api.add_resource(Logout, '/logout', endpoint='logout')
@@ -440,5 +474,6 @@ class BillingAddressesByID(Resource):
 
 api.add_resource(BillingAddressesByID, '/billing_addresses/<int:id>')
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(port=5555, debug=True)
+
