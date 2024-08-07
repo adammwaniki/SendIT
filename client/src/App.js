@@ -11,7 +11,7 @@ function App() {
   //AlphaG
   return (
     <LoadScript
-      googleMapsApiKey="AIzaSyBZrvf_oBQ0EmEtg8jpDe5e6hki1swgMJQ"
+      googleMapsApiKey="GOOGLE_MAPS_API_KEY_HERE"
       libraries={["geometry", "drawing", "places", "directions"]}
     >
       <div className="App">
