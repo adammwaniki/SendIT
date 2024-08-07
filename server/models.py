@@ -53,7 +53,7 @@ class Role(db.Model, RoleMixin, SerializerMixin):
 
     serialize_rules = ('-users.roles',) # Avoiding recursion
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<Role(id={self.id}, name='{self.name}')>"
 
 class Recipient(db.Model, SerializerMixin):
@@ -75,7 +75,7 @@ class Recipient(db.Model, SerializerMixin):
         return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
 
 class Parcel(db.Model, SerializerMixin):
-    _tablename_ = 'parcels'
+    __tablename__ = 'parcels'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
     recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id')) # Foreign Key to the recipients
@@ -117,7 +117,7 @@ class UserAddress(db.Model, SerializerMixin):
         return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
 class RecipientAddress(db.Model, SerializerMixin):
-    _tablename_ = 'recipient_addresses'
+    __tablename__ = 'recipient_addresses'
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id')) # Foreign Key to the recipients
     street = db.Column(db.String(255))
