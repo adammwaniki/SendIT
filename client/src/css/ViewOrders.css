@@ -1,0 +1,15 @@
+.view-orders {
+    padding: 1rem;
+  }
+  
+  .view-orders h2 {
+    color: black;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .orders-list {
+    background-color: #F6F7C4;
+    border-radius: 15px;
+    padding: 1.5rem;
+  }
