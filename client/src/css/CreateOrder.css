@@ -1,0 +1,83 @@
+
+.create-order {
+    padding: 1rem;
+  }
+  
+  .create-order h2 {
+    color: black;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .order-form {
+    background-color: #F6F7C4;
+    border-radius: 15px;
+    padding: 1.5rem;
+  }
+  
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .form-column {
+    flex-basis: 48%;
+  }
+  
+  .form-column h3, .parcel-details h3 {
+    color: black;
+    margin-bottom: 1rem;
+  }
+  
+  .input-group {
+    margin-bottom: 1rem;
+  }
+  
+  .input-group label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: black;
+    font-weight: bold;
+  }
+  
+  .input-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    color: black;
+  }
+  
+  .parcel-details .form-row {
+    flex-wrap: nowrap;
+  }
+  
+  .parcel-details .input-group {
+    flex-basis: 23%;
+  }
+  
+  .error {
+    color: red;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+  }
+  
+  .create-order-btn {
+    display: block;
+    width: 200px;
+    margin: 1rem auto 0;
+    padding: 0.75rem;
+    background-color: indigo;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .create-order-btn:hover {
+    background-color: #4b0082;
+  }

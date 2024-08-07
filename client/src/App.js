@@ -1,24 +1,27 @@
 
-
+import React, { useState } from 'react';
+import { LoadScript } from '@react-google-maps/api';
+import Homepage from './components/HomePage'
+import Dashboard from './components/Dashboard';
+import './App.css';
 
 function App() {
+  const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+
+  //AlphaG
   return (
-    <div className="App">
-      <header className="App-header">
-        {/*<img src={logo} className="App-logo" alt="logo" />*/}
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <LoadScript
+      googleMapsApiKey="AIzaSyBZrvf_oBQ0EmEtg8jpDe5e6hki1swgMJQ"
+      libraries={["geometry", "drawing", "places", "directions"]}
+    >
+      <div className="App">
+        {isUserSignedIn ? (
+          <Dashboard setIsUserSignedIn={setIsUserSignedIn} />
+        ) : (
+          <Homepage setIsUserSignedIn={setIsUserSignedIn} />
+        )}
+      </div>
+    </LoadScript>
   );
 }
 
