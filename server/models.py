@@ -38,7 +38,7 @@ class User(db.Model, UserMixin, SerializerMixin):
     parcels = db.relationship('Parcel', back_populates='user')
 
     # Required by Flask-Security and Flask-Login for compatibility
-    active = db.Column(db.Boolean(), default=True)  
+    # active = db.Column(db.Boolean(), default=True)  # commented out for testing
 
     # Serialization rules to prevent circular references
     serialize_rules = ('-roles.users', '-user_address.user', '-billing_address.user', '-parcels.user')

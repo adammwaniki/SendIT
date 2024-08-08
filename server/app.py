@@ -4,48 +4,25 @@
 # Remote library imports
 from flask import request, make_response, jsonify, redirect, url_for, session
 from flask_restful import Api, Resource
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_security import Security, SQLAlchemySessionUserDatastore, UserDatastore
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 
-# Local imports
 from config import app, db, api
 from models import User, Role, Recipient, Parcel, UserAddress, RecipientAddress, BillingAddress
 
-# Adding Migration support
 migrate = Migrate(app, db)
 
-# Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'  # Redirect to login page if unauthorized
-
-# Initialize Flask-Security
-user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
-security = Security(app, user_datastore)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+def load_user():
+    user_id = session.get('user_id')
+    if user_id:
+        return User.query.get(int(user_id))
+    return None
 
 @app.before_request
 def check_if_logged_in():
     whitelist = ['index', 'signup', 'login', 'check_session', 'clear']
-    if request.endpoint not in whitelist and 'user_id' not in session:
+    if request.endpoint not in whitelist and not load_user():
         return make_response(jsonify({"message": "Unauthorized access"}), 401)
-    
-'''
-class SecureResource(Resource):
-    @login_required
-    def get(self):
-        # Some secure resource that is only accessible if user is logged in 
-        # I could use this for the admin panel
-        return {"message": "You are logged in!"}, 200
-
-api.add_resource(SecureResource, '/secure')
-'''
-
 
 @app.route('/')
 def index():
@@ -54,17 +31,13 @@ def index():
 class Signup(Resource):
     def post(self):
         data = request.get_json()
-
-        # Making sure the user fills in all the fields
         if not all(k in data for k in ('first_name', 'last_name', 'email', 'password')):
             return {"message": "Missing required fields"}, 400
 
-        # Check if the email already exists
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
             return {"message": "Email is already in use"}, 400
 
-        # Create a new user if email is unique
         hashed_password = generate_password_hash(data['password'])
         new_user = User(
             first_name=data['first_name'],
@@ -75,14 +48,11 @@ class Signup(Resource):
         db.session.add(new_user)
         db.session.commit()
 
-        # Log in the new user and set the session
-        login_user(new_user)
-        session['user_id'] = new_user.id  # Set user ID in the session
+        session['user_id'] = new_user.id
 
         return {"message": "User created successfully", "user": new_user.to_dict()}, 201
 
 api.add_resource(Signup, '/signup', endpoint='signup')
-
 
 class Login(Resource):
     def post(self):
@@ -90,33 +60,25 @@ class Login(Resource):
         user = User.query.filter_by(email=data['email']).first()
         
         if user and check_password_hash(user.password, data['password']):
-            login_user(user)
-            session['user_id'] = user.id  # Set user ID in the session
+            session['user_id'] = user.id
             return {"message": "Login successful"}, 200
         
         return {"message": "Invalid credentials"}, 401
-    
+
 api.add_resource(Login, '/login', endpoint='login')
 
 class Logout(Resource):
     def delete(self):
-        logout_user()
-        session.pop('user_id', None)  # Remove user ID from session
+        session.pop('user_id', None)
         return {}, 204
     
 api.add_resource(Logout, '/logout', endpoint='logout')
 
-class ClearSession(Resource):
-    def delete(self):
-        logout_user()
-        return {}, 204
-    
-api.add_resource(ClearSession, '/clear', endpoint='clear')
-
 class CheckSession(Resource):
     def get(self):
-        if current_user.is_authenticated:
-            return current_user.to_dict()
+        user = load_user()
+        if user:
+            return user.to_dict()
         return {}, 204
     
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
