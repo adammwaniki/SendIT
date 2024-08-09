@@ -284,7 +284,7 @@ class UserAddresses(Resource):
             return make_response(jsonify({"message": "Unauthorized"}), 401)
 
         new_user_address = UserAddress(
-            user_id=current_user.id,  # Automatically set the user_id from the current session user
+            # user_id=current_user.id,  # Automatically set the user_id from the current session user
             street=data['street'],
             city=data['city'],
             state=data.get('state'),  # Use .get() to handle optional fields
@@ -296,7 +296,6 @@ class UserAddresses(Resource):
         db.session.add(new_user_address)
         db.session.commit()
         return make_response(jsonify(new_user_address.to_dict()), 201)
-
 
 api.add_resource(UserAddresses, '/user_addresses')
 
@@ -337,7 +336,7 @@ class RecipientAddresses(Resource):
     def post(self):
         data = request.get_json()
         new_recipient_address = RecipientAddress(
-            recipient_id=data['recipient_id'],
+            #recipients=data['recipient_id'], # I removed this from the models
             street=data['street'],
             city=data['city'],
             state=data['state'],
@@ -392,7 +391,7 @@ class BillingAddresses(Resource):
             return make_response(jsonify({"message": "Unauthorized"}), 401)
 
         new_billing_address = BillingAddress(
-            user_id=current_user.id,  # Automatically set the user_id from the current session user
+            # user_id=current_user.id,  # Automatically set the user_id from the current session user
             street=data['street'],
             city=data['city'],
             state=data.get('state'),  # Use .get() to handle optional fields
@@ -433,7 +432,6 @@ class BillingAddressesByID(Resource):
         return make_response(jsonify({"message": "BillingAddress not found"}), 404)
 
 api.add_resource(BillingAddressesByID, '/billing_addresses/<int:id>')
-
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

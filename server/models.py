@@ -1,43 +1,51 @@
 # /server/models.py
 
+from sqlalchemy import DateTime, func, Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship, validates
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy import DateTime, func
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_security import UserMixin, RoleMixin
 import uuid
+import re
 
 from config import db
 
-# Association table for the many-to-many relationship between users and roles
+# Association tables for many-to-many relationships
 roles_users = db.Table('roles_users',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'))
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('role_id', Integer, ForeignKey('roles.id'))
 )
 
-# Join table for the one-to-one relationship between users and user addresses
-class UserAddressAssociation(db.Model):
-    __tablename__ = 'user_address_association'
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('user_addresses.id'), primary_key=True)
+# Association table for one-to-one relationships
+user_address_association = db.Table('user_address_association',
+    Column('id', Integer, primary_key=True),  # New column as primary key
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('address_id', Integer, ForeignKey('user_addresses.id'))
+)
 
-    user = db.relationship('User', back_populates='user_address_associations')
-    address = db.relationship('UserAddress', back_populates='user_address_associations')
+recipient_address_association = db.Table('recipient_address_association',
+    Column('id', Integer, primary_key=True),  # New column as primary key
+    Column('recipient_id', Integer, ForeignKey('recipients.id')),
+    Column('address_id', Integer, ForeignKey('recipient_addresses.id'))
+)
 
 class UserAddress(db.Model, SerializerMixin):
     __tablename__ = 'user_addresses'
     
-    id = db.Column(db.Integer, primary_key=True)
-    street = db.Column(db.String(255))
-    city = db.Column(db.String(100), nullable=False)
-    state = db.Column(db.String(100))
-    zip_code = db.Column(db.String(20))
-    country = db.Column(db.String(100), nullable=False)
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    street = Column(String(255))
+    city = Column(String(100), nullable=False)
+    state = Column(String(100))
+    zip_code = Column(String(20))
+    country = Column(String(100), nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
-    user_address_associations = db.relationship('UserAddressAssociation', back_populates='address')
+    # Relationship to User
+    user_associations = relationship('User', secondary=user_address_association, back_populates='user_addresses')
     
     def __repr__(self):
         return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
@@ -45,75 +53,87 @@ class UserAddress(db.Model, SerializerMixin):
 class User(db.Model, UserMixin, SerializerMixin):
     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(130), nullable=False)
-    last_name = db.Column(db.String(130), nullable=False)
-    email = db.Column(db.String(130), unique=True, nullable=False)
-    password = db.Column(db.String, nullable=False)
-    phone_number = db.Column(db.String(50))
-    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(130), nullable=False)
+    last_name = Column(String(130), nullable=False)
+    email = Column(String(130), unique=True, nullable=False)
+    password = Column(String, nullable=False)
+    phone_number = Column(String(50))
+    fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     # Many-to-many relationship with roles
-    roles = db.relationship('Role', secondary=roles_users, back_populates='users')
+    roles = relationship('Role', secondary=roles_users, back_populates='users')
 
     # One-to-one relationship with billing address
-    billing_address_id = db.Column(db.Integer, db.ForeignKey('billing_addresses.id'))
-    billing_address = db.relationship('BillingAddress', back_populates='user', uselist=False, foreign_keys=[billing_address_id])
+    billing_address_id = Column(Integer, ForeignKey('billing_addresses.id'))
+    billing_address = relationship('BillingAddress', back_populates='user', uselist=False, foreign_keys=[billing_address_id])
 
-    # One-to-many relationship with user address associations
-    user_address_associations = db.relationship('UserAddressAssociation', back_populates='user')
-    
+    # Many-to-many relationship with user addresses
+    user_addresses = relationship('UserAddress', secondary=user_address_association, back_populates='user_associations')
+    # user_associations = relationship('User', secondary=user_address_association, back_populates='user_addresses') # Works with proxy
+    # user_addresses = association_proxy('user_associations', 'user_address') # Commenting out since user proxy is good for targeting specific things while relationships allows me to target the object
+
     # One-to-many relationship with parcels
-    parcels = db.relationship('Parcel', back_populates='user')
+    parcels = relationship('Parcel', back_populates='user')
 
     # Serialization rules
     serialize_rules = ('-roles.users', '-billing_address.user', '-parcels.user')
 
+    @validates('email')
+    def validate_email(self, key, email):
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValueError("Invalid email format")
+        if User.query.filter(User.email == email).first():
+            raise ValueError("Email must be unique")
+        return email
+
+    @validates('password')
+    def validates_password(self, key, password):
+        if len(password) < 6:
+            raise ValueError("Password should be more than 6 characters")
+        return password
+    
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
     def __repr__(self):
         return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}')>"
-    
+
 class Role(db.Model, RoleMixin, SerializerMixin):
     __tablename__ = 'roles'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the role
-    name = db.Column(db.String(80), unique=True)  # Role name, must be unique
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), unique=True)
     
     # Many-to-many relationship with users
-    users = db.relationship('User', secondary=roles_users, back_populates='roles')
+    users = relationship('User', secondary=roles_users, back_populates='roles')
 
-    # Serialization rule to prevent circular references
     serialize_rules = ('-users.roles',)
 
     def __repr__(self):
         return f"<Role(id={self.id}, name='{self.name}')>"
 
-# Join table for the one-to-one relationship between recipients and recipient addresses
-class RecipientAddressAssociation(db.Model):
-    __tablename__ = 'recipient_address_association'
-    
-    recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id'), primary_key=True)
-    address_id = db.Column(db.Integer, db.ForeignKey('recipient_addresses.id'), primary_key=True)
-
-    recipient = db.relationship('Recipient', backref=db.backref('recipient_address_association', uselist=False))
-    address = db.relationship('RecipientAddress', backref=db.backref('recipient_address_association', uselist=False))
-
 class RecipientAddress(db.Model, SerializerMixin):
     __tablename__ = 'recipient_addresses'
     
-    id = db.Column(db.Integer, primary_key=True)
-    street = db.Column(db.String(255))
-    city = db.Column(db.String(100), nullable=False)
-    state = db.Column(db.String(100))
-    zip_code = db.Column(db.String(20))
-    country = db.Column(db.String(100), nullable=False)
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    street = Column(String(255))
+    city = Column(String(100), nullable=False)
+    state = Column(String(100))
+    zip_code = Column(String(20))
+    country = Column(String(100), nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
-    # Correct reference; should match the Recipient model
-    recipients = db.relationship('Recipient', secondary='recipient_address_association', back_populates='delivery_address')
+    # Relationship to Recipient using relationship instead of proxy to target the object like in user addresses
+    recipients = relationship('Recipient', secondary=recipient_address_association, back_populates='delivery_addresses')
 
     def __repr__(self):
         return f"<RecipientAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
@@ -121,17 +141,17 @@ class RecipientAddress(db.Model, SerializerMixin):
 class Recipient(db.Model, SerializerMixin):
     __tablename__ = 'recipients'
     
-    id = db.Column(db.Integer, primary_key=True)
-    recipient_full_name = db.Column(db.String(130), nullable=False)
-    phone_number = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    recipient_full_name = Column(String(130))
+    phone_number = Column(String(50))
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     # One-to-many relationship with parcels
-    parcels = db.relationship('Parcel', back_populates='recipient')
+    parcels = relationship('Parcel', back_populates='recipient')
 
-    # One-to-one relationship with delivery address via join table
-    delivery_address = db.relationship('RecipientAddress', secondary='recipient_address_association', back_populates='recipients')
+    # Many-to-many relationship with delivery addresses
+    delivery_addresses = relationship('RecipientAddress', secondary=recipient_address_association, back_populates='recipients')
 
     def __repr__(self):
         return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
@@ -139,19 +159,19 @@ class Recipient(db.Model, SerializerMixin):
 class BillingAddress(db.Model, SerializerMixin):
     __tablename__ = 'billing_addresses'
     
-    id = db.Column(db.Integer, primary_key=True)
-    street = db.Column(db.String(255))
-    city = db.Column(db.String(100), nullable=False)
-    state = db.Column(db.String(100))
-    zip_code = db.Column(db.String(20))
-    country = db.Column(db.String(100), nullable=False)
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    street = Column(String(255))
+    city = Column(String(100), nullable=False)
+    state = Column(String(100))
+    zip_code = Column(String(20))
+    country = Column(String(100), nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     # One-to-one relationship with User
-    user = db.relationship('User', back_populates='billing_address')
+    user = relationship('User', back_populates='billing_address')
 
     def __repr__(self):
         return f"<BillingAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
@@ -159,26 +179,25 @@ class BillingAddress(db.Model, SerializerMixin):
 class Parcel(db.Model, SerializerMixin):
     __tablename__ = 'parcels'
     
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id'))
-    length = db.Column(db.Integer)
-    width = db.Column(db.Integer)
-    height = db.Column(db.Integer)
-    weight = db.Column(db.Integer)
-    cost = db.Column(db.Float)  # Cost of the parcel
-    status = db.Column(db.String(50))
-    tracking_number = db.Column(db.String(32), unique=True, default=lambda: str(uuid.uuid4().hex))
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    recipient_id = Column(Integer, ForeignKey('recipients.id'))
+    length = Column(Integer)
+    width = Column(Integer)
+    height = Column(Integer)
+    weight = Column(Integer)
+    cost = Column(Float)
+    status = Column(String(50))
+    tracking_number = Column(String(32), unique=True, default=lambda: str(uuid.uuid4().hex))
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     # Many-to-one relationship with User
-    user = db.relationship('User', back_populates='parcels')
+    user = relationship('User', back_populates='parcels')
     
     # Many-to-one relationship with Recipient
-    recipient = db.relationship('Recipient', back_populates='parcels')
+    recipient = relationship('Recipient', back_populates='parcels')
 
-    # Serialization rules
     serialize_rules = ('-user.parcels', '-recipient.parcels')
 
     def __repr__(self):
