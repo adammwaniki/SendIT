@@ -7,126 +7,25 @@ import uuid
 
 from config import db
 
-# Table to assign roles to users
-# This is an association table for the many-to-many relationship between users and roles
+# Association table for the many-to-many relationship between users and roles
 roles_users = db.Table('roles_users',
-    db.Column('user_id', db.Integer(), db.ForeignKey('users.id')),
-    db.Column('role_id', db.Integer(), db.ForeignKey('roles.id'))
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'))
 )
 
-class User(db.Model, UserMixin, SerializerMixin):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the user
-    first_name = db.Column(db.String(130), nullable=False)  # User's first name
-    last_name = db.Column(db.String(130), nullable=False)  # User's last name
-    email = db.Column(db.String(130), unique=True, nullable=False)  # User's email, must be unique
-    password = db.Column(db.String, nullable=False)  # User's password
-    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))  # Unique identifier for Flask-Security
-    user_address_id = db.Column(db.Integer, db.ForeignKey('user_addresses.id'))  # Foreign key to user address
-    billing_address_id = db.Column(db.Integer, db.ForeignKey('billing_addresses.id'))  # Foreign key to billing address
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())  # Timestamp of when the user was created
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())  # Timestamp of last update
-
-    # Many-to-many relationship with roles
-    roles = db.relationship('Role', secondary=roles_users, back_populates='users')
-    # Many-to-one relationship with user address
-    user_address = db.relationship('UserAddress', back_populates='user', foreign_keys=[user_address_id])
-    # Many-to-one relationship with billing address
-    billing_address = db.relationship('BillingAddress', back_populates='user', foreign_keys=[billing_address_id])
+# Join table for the one-to-one relationship between users and user addresses
+class UserAddressAssociation(db.Model):
+    __tablename__ = 'user_address_association'
     
-    # Many-to-many relationship with parcels
-    parcels = db.relationship('Parcel', back_populates='user')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('user_addresses.id'), primary_key=True)
 
-    # Required by Flask-Security and Flask-Login for compatibility
-    # active = db.Column(db.Boolean(), default=True)  # commented out for testing
-
-    # Serialization rules to prevent circular references
-    serialize_rules = ('-roles.users', '-user_address.user', '-billing_address.user', '-parcels.user')
-
-    def __repr__(self):
-        return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}')>"
-
-class Role(db.Model, RoleMixin, SerializerMixin):
-    __tablename__ = 'roles'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the role
-    name = db.Column(db.String(80), unique=True)  # Role name, must be unique
-    # Many-to-many relationship with users
-    users = db.relationship('User', secondary=roles_users, back_populates='roles')
-
-    # Serialization rule to prevent circular references
-    serialize_rules = ('-users.roles',)
-
-    def __repr__(self):
-        return f"<Role(id={self.id}, name='{self.name}')>"
-
-class Recipient(db.Model, SerializerMixin):
-    __tablename__ = 'recipients'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the recipient
-    recipient_full_name = db.Column(db.String(130), nullable=False)  # Full name of the recipient
-    phone_number = db.Column(db.String(50), nullable=False)  # Phone number of the recipient
-    delivery_address_id = db.Column(db.Integer, db.ForeignKey('recipient_addresses.id'))  # Foreign key to recipient address
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())  # Timestamp of when the recipient was created
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())  # Timestamp of last update
-
-    # One-to-one relationship with delivery address
-    delivery_address = db.relationship('RecipientAddress', back_populates='recipient', foreign_keys=[delivery_address_id])
-    # Define the relationship to Parcel
-    parcels = db.relationship('Parcel', back_populates='recipient')
-
-    # Serialization rule to prevent circular references
-    serialize_rules = ('-delivery_address.recipients', '-parcels.recipient')
-
-    def __repr__(self):
-        return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
-
-class Parcel(db.Model, SerializerMixin):
-    __tablename__ = 'parcels'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) # Foreign Key to the users
-    recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id')) # Foreign Key to the recipients
-    length = db.Column(db.Integer)
-    width = db.Column(db.Integer)
-    height = db.Column(db.Integer)
-    weight = db.Column(db.Integer)
-    status = db.Column(db.String(50))
-    tracking_number = db.Column(db.String(32), unique=True, default=lambda: str(uuid.uuid4().hex)) # Unique identifier for tracking. We can make use of Flask Security here
-    created_at = db.Column(DateTime, server_default=func.current_timestamp()) # Timestamp for when the parcel is created
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp()) # Timestamp for when the parcel is updated
-
-    # Defining the relationship back to User
-    user = db.relationship('User', back_populates='parcels')
-    # Many-to-one relationship with recipients
-    recipient = db.relationship('Recipient', back_populates='parcels', foreign_keys=[recipient_id]) 
-
-    serialize_rules = ('-user.parcels', '-recipient.parcels') # Avoiding recursion
-
-    def __repr__(self):
-        return f"<Parcel(id={self.id}, length={self.length}, width={self.width}, height={self.height}, weight={self.weight}, tracking_number='{self.tracking_number}')>"
+    user = db.relationship('User', back_populates='user_address_associations')
+    address = db.relationship('UserAddress', back_populates='user_address_associations')
 
 class UserAddress(db.Model, SerializerMixin):
     __tablename__ = 'user_addresses'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the user address
-    street = db.Column(db.String(255))  # Street address
-    city = db.Column(db.String(100), nullable=False)  # City
-    state = db.Column(db.String(100))  # State
-    zip_code = db.Column(db.String(20))  # Zip code
-    country = db.Column(db.String(100), nullable=False)  # Country
-    latitude = db.Column(db.Float)  # Latitude of the address
-    longitude = db.Column(db.Float)  # Longitude of the address
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())  # Timestamp of when the address was created
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())  # Timestamp of last update
-
-    # Adding this relationship to complete the bidirectional link
-    user = db.relationship('User', back_populates='user_address')
-
-    # Updated serialization rules
-    serialize_rules = ('-user.user_address',)
-
-    def __repr__(self):
-        return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
-
-class RecipientAddress(db.Model, SerializerMixin):
-    __tablename__ = 'recipient_addresses'
+    
     id = db.Column(db.Integer, primary_key=True)
     street = db.Column(db.String(255))
     city = db.Column(db.String(100), nullable=False)
@@ -137,34 +36,150 @@ class RecipientAddress(db.Model, SerializerMixin):
     longitude = db.Column(db.Float)
     created_at = db.Column(DateTime, server_default=func.current_timestamp())
     updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
-    
-    # Adding the relationship with the recipient
-    recipient = db.relationship('Recipient', back_populates='delivery_address', uselist=False)
 
-    # Updated serialization rules
-    serialize_rules = ('-recipient.delivery_address',)
+    user_address_associations = db.relationship('UserAddressAssociation', back_populates='address')
     
+    def __repr__(self):
+        return f"<UserAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
+
+class User(db.Model, UserMixin, SerializerMixin):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(130), nullable=False)
+    last_name = db.Column(db.String(130), nullable=False)
+    email = db.Column(db.String(130), unique=True, nullable=False)
+    password = db.Column(db.String, nullable=False)
+    phone_number = db.Column(db.String(50))
+    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    created_at = db.Column(DateTime, server_default=func.current_timestamp())
+    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Many-to-many relationship with roles
+    roles = db.relationship('Role', secondary=roles_users, back_populates='users')
+
+    # One-to-one relationship with billing address
+    billing_address_id = db.Column(db.Integer, db.ForeignKey('billing_addresses.id'))
+    billing_address = db.relationship('BillingAddress', back_populates='user', uselist=False, foreign_keys=[billing_address_id])
+
+    # One-to-many relationship with user address associations
+    user_address_associations = db.relationship('UserAddressAssociation', back_populates='user')
+    
+    # One-to-many relationship with parcels
+    parcels = db.relationship('Parcel', back_populates='user')
+
+    # Serialization rules
+    serialize_rules = ('-roles.users', '-billing_address.user', '-parcels.user')
+
+    def __repr__(self):
+        return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}')>"
+    
+class Role(db.Model, RoleMixin, SerializerMixin):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)  # Primary key for the role
+    name = db.Column(db.String(80), unique=True)  # Role name, must be unique
+    
+    # Many-to-many relationship with users
+    users = db.relationship('User', secondary=roles_users, back_populates='roles')
+
+    # Serialization rule to prevent circular references
+    serialize_rules = ('-users.roles',)
+
+    def __repr__(self):
+        return f"<Role(id={self.id}, name='{self.name}')>"
+
+# Join table for the one-to-one relationship between recipients and recipient addresses
+class RecipientAddressAssociation(db.Model):
+    __tablename__ = 'recipient_address_association'
+    
+    recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id'), primary_key=True)
+    address_id = db.Column(db.Integer, db.ForeignKey('recipient_addresses.id'), primary_key=True)
+
+    recipient = db.relationship('Recipient', backref=db.backref('recipient_address_association', uselist=False))
+    address = db.relationship('RecipientAddress', backref=db.backref('recipient_address_association', uselist=False))
+
+class RecipientAddress(db.Model, SerializerMixin):
+    __tablename__ = 'recipient_addresses'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    street = db.Column(db.String(255))
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100))
+    zip_code = db.Column(db.String(20))
+    country = db.Column(db.String(100), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    created_at = db.Column(DateTime, server_default=func.current_timestamp())
+    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Correct reference; should match the Recipient model
+    recipients = db.relationship('Recipient', secondary='recipient_address_association', back_populates='delivery_address')
+
     def __repr__(self):
         return f"<RecipientAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
 
+class Recipient(db.Model, SerializerMixin):
+    __tablename__ = 'recipients'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_full_name = db.Column(db.String(130), nullable=False)
+    phone_number = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(DateTime, server_default=func.current_timestamp())
+    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # One-to-many relationship with parcels
+    parcels = db.relationship('Parcel', back_populates='recipient')
+
+    # One-to-one relationship with delivery address via join table
+    delivery_address = db.relationship('RecipientAddress', secondary='recipient_address_association', back_populates='recipients')
+
+    def __repr__(self):
+        return f"<Recipient(id={self.id}, recipient_full_name='{self.recipient_full_name}', phone_number='{self.phone_number}')>"
+
 class BillingAddress(db.Model, SerializerMixin):
     __tablename__ = 'billing_addresses'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key for the billing address
-    street = db.Column(db.String(255))  # Street address
-    city = db.Column(db.String(100), nullable=False)  # City
-    state = db.Column(db.String(100))  # State
-    zip_code = db.Column(db.String(20))  # Zip code
-    country = db.Column(db.String(100), nullable=False)  # Country
-    latitude = db.Column(db.Float)  # Latitude of the address
-    longitude = db.Column(db.Float)  # Longitude of the address
-    created_at = db.Column(DateTime, server_default=func.current_timestamp())  # Timestamp of when the address was created
-    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())  # Timestamp of last update
+    
+    id = db.Column(db.Integer, primary_key=True)
+    street = db.Column(db.String(255))
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100))
+    zip_code = db.Column(db.String(20))
+    country = db.Column(db.String(100), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    created_at = db.Column(DateTime, server_default=func.current_timestamp())
+    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
-    # Adding this relationship to complete the bidirectional link same as in UserAddress
+    # One-to-one relationship with User
     user = db.relationship('User', back_populates='billing_address')
-
-    # Updated serialization rules
-    serialize_rules = ('-user.billing_address',)
 
     def __repr__(self):
         return f"<BillingAddress(id={self.id}, city='{self.city}', state='{self.state}', country='{self.country}')>"
+
+class Parcel(db.Model, SerializerMixin):
+    __tablename__ = 'parcels'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('recipients.id'))
+    length = db.Column(db.Integer)
+    width = db.Column(db.Integer)
+    height = db.Column(db.Integer)
+    weight = db.Column(db.Integer)
+    cost = db.Column(db.Float)  # Cost of the parcel
+    status = db.Column(db.String(50))
+    tracking_number = db.Column(db.String(32), unique=True, default=lambda: str(uuid.uuid4().hex))
+    created_at = db.Column(DateTime, server_default=func.current_timestamp())
+    updated_at = db.Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Many-to-one relationship with User
+    user = db.relationship('User', back_populates='parcels')
+    
+    # Many-to-one relationship with Recipient
+    recipient = db.relationship('Recipient', back_populates='parcels')
+
+    # Serialization rules
+    serialize_rules = ('-user.parcels', '-recipient.parcels')
+
+    def __repr__(self):
+        return f"<Parcel(id={self.id}, length={self.length}, width={self.width}, height={self.height}, weight={self.weight}, cost={self.cost}, tracking_number='{self.tracking_number}')>"
