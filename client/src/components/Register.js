@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import '../css/Register.css';
 
-function Register({ setActivePage }) {
+function Register({ setActivePage, onRegisterSuccess }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return re.test(String(email).toLowerCase());
   };
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     if (!firstName || !lastName) {
       setError('Please enter your first and last name');
@@ -26,8 +27,35 @@ function Register({ setActivePage }) {
       setError('Passwords do not match');
     } else {
       setError('');
-      // Proceed with registration logic here
-      console.log('Sign up attempt with:', { firstName, lastName, email, password });
+      setIsLoading(true);
+      try {
+        const response = await fetch('/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log('Sign up successful:', data);
+          onRegisterSuccess(); // Call the onRegisterSuccess callback
+        } else {
+          setError(data.message || 'An error occurred during signup');
+        }
+      } catch (error) {
+        console.error('Error during signup:', error);
+        setError('An error occurred. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -87,7 +115,9 @@ function Register({ setActivePage }) {
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="signup-button">Sign Up</button>
+          <button type="submit" className="signup-button" disabled={isLoading}>
+            {isLoading ? 'Signing Up...' : 'Sign Up'}
+          </button>
           <p className="login-link">
             Already have an account? <a href="#" onClick={() => setActivePage('login')}>Login</a>
           </p>

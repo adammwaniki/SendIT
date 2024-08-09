@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from './Home';
 import Register from './Register';
 import Login from './Login';
 import '../css/Homepage.css';
 import logo from '../assets/images/favicon.ico';
 
-function Homepage({ setIsUserSignedIn }) {
-    const [activePage, setActivePage] = useState('home');
+function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
+    const [activePage, setActivePage] = useState(initialPage);
+    const navigate = useNavigate();
   
+    useEffect(() => {
+      setActivePage(initialPage);
+    }, [initialPage]);
+
     const handleSignIn = () => {
-      // This would typically involve authentication logic
       setIsUserSignedIn(true);
+      navigate('/dashboard');
+    };
+
+    const handleRegisterSuccess = () => {
+      setActivePage('login');
     };
 
   return (
@@ -21,7 +31,7 @@ function Homepage({ setIsUserSignedIn }) {
       </header>
       <main>
         {activePage === 'home' && <Home setActivePage={setActivePage} />}
-        {activePage === 'register' && <Register setActivePage={setActivePage} />}
+        {activePage === 'register' && <Register setActivePage={setActivePage} onRegisterSuccess={handleRegisterSuccess} />}
         {activePage === 'login' && <Login setActivePage={setActivePage} onSignIn={handleSignIn} />}
       </main>
       <footer>

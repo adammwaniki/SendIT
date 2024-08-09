@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CreateOrder from './CreateOrder';
 import GetQuote from './GetQuote';
 import ViewOrders from './ViewOrders';
@@ -7,15 +8,49 @@ import '../css/Dashboard.css';
 
 function Dashboard({ setIsUserSignedIn }) {
   const [activeLink, setActiveLink] = useState('Get a Quote');
-  
-  // This would typically come from your user state or context
-  const user = {
-    fullName: "John Doe",
-    profileImage: avatarImage
-  };
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setIsUserSignedIn(false);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/check_session', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          // If there's no active session, redirect to login
+          setIsUserSignedIn(false);
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setIsUserSignedIn(false);
+        navigate('/login');
+      }
+    };
+
+    fetchUserData();
+  }, [setIsUserSignedIn, navigate]);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/logout', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        setIsUserSignedIn(false);
+        navigate('/login');
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   const renderActiveComponent = () => {
@@ -30,6 +65,10 @@ function Dashboard({ setIsUserSignedIn }) {
         return <GetQuote />;
     }
   };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="dashboard">
@@ -54,8 +93,8 @@ function Dashboard({ setIsUserSignedIn }) {
       </header>
       <main className="dashboard-content">
         <div className="profile-view">
-          <img src={user.profileImage} alt="Profile" className="profile-image" />
-          <p className="profile-name">{user.fullName}</p>
+          <img src={user.profileImage || avatarImage} alt="Profile" className="profile-image" />
+          <p className="profile-name">{`${user.first_name} ${user.last_name}`}</p>
         </div>
         <div className="main-view">
           {renderActiveComponent()}

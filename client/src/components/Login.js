@@ -5,13 +5,14 @@ function Login({ setActivePage, onSignIn }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return re.test(String(email).toLowerCase());
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
@@ -19,10 +20,42 @@ function Login({ setActivePage, onSignIn }) {
       setError('Password must be at least 6 characters long');
     } else {
       setError('');
-      // Proceed with login logic here
-      console.log('Login attempt with:', email, password);
-      onSignIn();
+      setIsLoading(true);
+      try {
+        const response = await fetch('/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log('Login successful:', data);
+          onSignIn(); // This will update the isUserSignedIn state in the App component
+        } else {
+          setError(data.message || 'Invalid email or password');
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        setError('An error occurred. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
     }
+  };
+
+  const handleRegisterClick = (e) => {
+    e.preventDefault();
+    setActivePage('register');
+  };
+
+  const handleForgotPasswordClick = (e) => {
+    e.preventDefault();
+    // Implement forgot password functionality
+    console.log('Forgot password clicked');
   };
 
   return (
@@ -51,10 +84,12 @@ function Login({ setActivePage, onSignIn }) {
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="login-button">Login</button>
-          <a href="#" className="forgot-password">Forgot Password?</a>
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
+          <a href="#" className="forgot-password" onClick={handleForgotPasswordClick}>Forgot Password?</a>
           <p className="register-link">
-            Don't have an account? <a href="#" onClick={() => setActivePage('register')}>Register</a>
+            Don't have an account? <a href="#" onClick={handleRegisterClick}>Register</a>
           </p>
         </form>
       </div>
