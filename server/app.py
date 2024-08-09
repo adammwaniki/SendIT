@@ -28,6 +28,7 @@ def check_if_logged_in():
 def index():
     return '<h1>Project Server</h1>'
 
+# User resource
 class Signup(Resource):
     def post(self):
         data = request.get_json()
@@ -83,7 +84,6 @@ class CheckSession(Resource):
     
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 
-# User resource
 class Users(Resource):
     def get(self):
         response_dict_list = [user.to_dict() for user in User.query.all()]
@@ -235,6 +235,7 @@ class Parcels(Resource):
             width=data['width'],
             height=data['height'],
             weight=data['weight'],
+            cost=data.get('cost'),  # Make cost optional
             status=data['status']
         )
         db.session.add(new_parcel)
@@ -278,15 +279,19 @@ class UserAddresses(Resource):
 
     def post(self):
         data = request.get_json()
+        current_user = load_user()
+        if not current_user:
+            return make_response(jsonify({"message": "Unauthorized"}), 401)
+
         new_user_address = UserAddress(
-            user_id=data['user_id'],
+            # user_id=current_user.id,  # Automatically set the user_id from the current session user
             street=data['street'],
             city=data['city'],
-            state=data['state'],
-            zip_code=data['zip_code'],
+            state=data.get('state'),  # Use .get() to handle optional fields
+            zip_code=data.get('zip_code'),
             country=data['country'],
-            latitude=data['latitude'],
-            longitude=data['longitude']
+            latitude=data.get('latitude'),
+            longitude=data.get('longitude')
         )
         db.session.add(new_user_address)
         db.session.commit()
@@ -306,7 +311,8 @@ class UserAddressesByID(Resource):
         if user_address_specific:
             data = request.get_json()
             for key, value in data.items():
-                setattr(user_address_specific, key, value)
+                if key != 'user_id':  # Avoid updating user_id because i only want it to target the current logged in user
+                    setattr(user_address_specific, key, value)
             db.session.commit()
             return make_response(jsonify(user_address_specific.to_dict()), 200)
         return make_response(jsonify({"message": "UserAddress not found"}), 404)
@@ -330,7 +336,7 @@ class RecipientAddresses(Resource):
     def post(self):
         data = request.get_json()
         new_recipient_address = RecipientAddress(
-            recipient_id=data['recipient_id'],
+            #recipients=data['recipient_id'], # I removed this from the models
             street=data['street'],
             city=data['city'],
             state=data['state'],
@@ -380,15 +386,19 @@ class BillingAddresses(Resource):
 
     def post(self):
         data = request.get_json()
+        current_user = load_user()
+        if not current_user:
+            return make_response(jsonify({"message": "Unauthorized"}), 401)
+
         new_billing_address = BillingAddress(
-            user_id=data['user_id'],
+            # user_id=current_user.id,  # Automatically set the user_id from the current session user
             street=data['street'],
             city=data['city'],
-            state=data['state'],
-            zip_code=data['zip_code'],
+            state=data.get('state'),  # Use .get() to handle optional fields
+            zip_code=data.get('zip_code'),
             country=data['country'],
-            latitude=data['latitude'],
-            longitude=data['longitude']
+            latitude=data.get('latitude'),
+            longitude=data.get('longitude')
         )
         db.session.add(new_billing_address)
         db.session.commit()
