@@ -202,4 +202,3 @@ class Parcel(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f"<Parcel(id={self.id}, length={self.length}, width={self.width}, height={self.height}, weight={self.weight}, cost={self.cost}, tracking_number='{self.tracking_number}')>"
-
