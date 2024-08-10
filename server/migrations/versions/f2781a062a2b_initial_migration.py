@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 656c70ea3479
+Revision ID: f2781a062a2b
 Revises: 
-Create Date: 2024-08-06 15:01:18.716821
+Create Date: 2024-08-10 13:18:03.194985
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '656c70ea3479'
+revision = 'f2781a062a2b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -44,6 +44,14 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('recipients',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('recipient_full_name', sa.String(length=130), nullable=True),
+    sa.Column('phone_number', sa.String(length=50), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('roles',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=80), nullable=True),
@@ -63,14 +71,12 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('recipients',
+    op.create_table('recipient_address_association',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('recipient_full_name', sa.String(length=130), nullable=False),
-    sa.Column('phone_number', sa.String(length=50), nullable=False),
-    sa.Column('delivery_address_id', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
-    sa.ForeignKeyConstraint(['delivery_address_id'], ['recipient_addresses.id'], name=op.f('fk_recipients_delivery_address_id_recipient_addresses')),
+    sa.Column('recipient_id', sa.Integer(), nullable=True),
+    sa.Column('address_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['address_id'], ['recipient_addresses.id'], name=op.f('fk_recipient_address_association_address_id_recipient_addresses')),
+    sa.ForeignKeyConstraint(['recipient_id'], ['recipients.id'], name=op.f('fk_recipient_address_association_recipient_id_recipients')),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
@@ -79,13 +85,12 @@ def upgrade():
     sa.Column('last_name', sa.String(length=130), nullable=False),
     sa.Column('email', sa.String(length=130), nullable=False),
     sa.Column('password', sa.String(), nullable=False),
+    sa.Column('phone_number', sa.String(length=50), nullable=True),
     sa.Column('fs_uniquifier', sa.String(length=255), nullable=False),
-    sa.Column('user_address_id', sa.Integer(), nullable=True),
-    sa.Column('billing_address_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('billing_address_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['billing_address_id'], ['billing_addresses.id'], name=op.f('fk_users_billing_address_id_billing_addresses')),
-    sa.ForeignKeyConstraint(['user_address_id'], ['user_addresses.id'], name=op.f('fk_users_user_address_id_user_addresses')),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('fs_uniquifier')
@@ -98,6 +103,7 @@ def upgrade():
     sa.Column('width', sa.Integer(), nullable=True),
     sa.Column('height', sa.Integer(), nullable=True),
     sa.Column('weight', sa.Integer(), nullable=True),
+    sa.Column('cost', sa.Float(), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=True),
     sa.Column('tracking_number', sa.String(length=32), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
@@ -113,17 +119,27 @@ def upgrade():
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], name=op.f('fk_roles_users_role_id_roles')),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_roles_users_user_id_users'))
     )
+    op.create_table('user_address_association',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('address_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['address_id'], ['user_addresses.id'], name=op.f('fk_user_address_association_address_id_user_addresses')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_address_association_user_id_users')),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('user_address_association')
     op.drop_table('roles_users')
     op.drop_table('parcels')
     op.drop_table('users')
-    op.drop_table('recipients')
+    op.drop_table('recipient_address_association')
     op.drop_table('user_addresses')
     op.drop_table('roles')
+    op.drop_table('recipients')
     op.drop_table('recipient_addresses')
     op.drop_table('billing_addresses')
     # ### end Alembic commands ###
