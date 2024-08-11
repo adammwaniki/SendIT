@@ -1,0 +1,112 @@
+.dashboard {
+    min-height: 100vh;
+    color: #333;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dashboard::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../assets/images/sendit-landscape-blue.jpeg'); 
+    background-size: cover;
+    background-position: center;
+    filter: brightness(50%); 
+    z-index: -1;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    color: white;
+    position: relative;
+  }
+  
+  .dashboard-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  
+  .highlight {
+    color: yellow;
+  }
+  
+  .dashboard-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .nav-link {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+  }
+  
+  .nav-link.active {
+    background-color: white;
+    color: black;
+  }
+  
+  .logout-button {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: lightcoral;
+    cursor: pointer;
+  }
+
+.dashboard-content {
+    display: flex;
+    padding: 2rem;
+    position: relative;
+    color: white;
+  }
+  
+  .profile-view {
+    flex: 0 0 200px;
+    padding: 1rem;
+    margin-right: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profile-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: purple;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 0.5rem;
+  }
+  
+  .main-view {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+  }

@@ -6,9 +6,12 @@ name = "pypi"
 [packages]
 flask = "*"
 flask-sqlalchemy = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 sqlalchemy-serializer = "*"
 flask-security = "*"
+flask-restful = "*"
+flask-migrate = "*"
+flask-cors = "*"
 
 [dev-packages]
 
