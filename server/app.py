@@ -6,11 +6,15 @@ from flask import request, make_response, jsonify, session
 from flask_restful import Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 
 from config import app, db, api
 from models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
+
+# Initialising Flask-Mail
+mail = Mail(app)
 
 def load_user():
     user_id = session.get('user_id')
@@ -335,6 +339,38 @@ class BillingAddressesByID(Resource):
         return make_response(jsonify({"message": "BillingAddress not found"}), 404)
 
 api.add_resource(BillingAddressesByID, '/billing_addresses/<int:id>')
+
+# SendEmail resource # Work in progress
+class SendEmail(Resource):
+    def post(self):
+        data = request.get_json()
+        
+        # Validate the incoming data
+        required_fields = ['to', 'subject', 'body']
+        if not all(field in data for field in required_fields):
+            return {"message": "Missing required fields"}, 400
+
+        recipients = data['to']
+        subject = data['subject']
+        body = data['body']
+        
+        try:
+            # Create a new email message
+            # Ensured recipients is a list, even if a single email address is provided.
+            msg = Message(subject=subject,
+                          recipients=[recipients] if isinstance(recipients, str) else recipients,
+                          body=body,
+                          sender=app.config['MAIL_USERNAME'])
+            
+            # Send the email
+            mail.send(msg)
+            return {"message": "Email sent successfully"}, 200
+        
+        except Exception as e:
+            return {"message": f"Error sending email: {str(e)}"}, 500
+
+# Add the SendEmail resource to the API
+api.add_resource(SendEmail, '/send-email')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
