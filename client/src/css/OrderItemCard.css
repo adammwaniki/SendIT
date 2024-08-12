@@ -1,83 +1,119 @@
 .order-item-card {
-  background-color: white;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  padding: 1rem;
   display: flex;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+  background-color: #F6F7C4;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .map-container {
   flex: 1;
-  margin-right: 1rem;
+  min-height: 300px;
 }
 
-.google-map {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-.mock-map {
-  background-color: #f0f0f0;
-  height: 200px;
+.details-container {
+  flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 5px;
+  flex-direction: column;
+  padding: 20px;
 }
 
-.order-details {
-  flex: 2;
-}
-
-.order-details h3 {
-  color: black;
-  margin-bottom: 0.5rem;
+.parcel-details {
+  flex-grow: 1;
   text-align: left;
 }
 
-.order-details ul {
-  list-style-type: disc;
-  margin: 0;
-  padding: 0;
-  margin-bottom: 1rem;
+.parcel-details h3 {
+  color: #333;
+  margin-top: 0;
 }
 
-.order-details li {
-  margin: 0 0 0.5rem 1.2em; 
-  padding: 0;
-  color: black;
-  text-align: left;
+.parcel-details p {
+  color: #000;
+  margin: 10px 0;
 }
 
-.button-container {
-  display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
-}
-
-.update-btn, .cancel-btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+.parcel-details strong {
   font-weight: bold;
 }
 
-.update-btn {
-  background-color: blue;
+.address-section {
+  margin: 15px 0;
+}
+
+.address-section h4 {
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.toggle-button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-button:hover {
+  background-color: #45a049;
+}
+
+.address-details {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.cancel-button, .update-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-button {
+  background-color: #f44336;
   color: white;
 }
 
-.cancel-btn {
-  background-color: red;
+.update-button {
+  background-color: #2196F3;
   color: white;
 }
 
-input {
-  width: 100%;
-  padding: 0.3rem;
-  margin-top: 0.2rem;
+.cancel-button:hover {
+  background-color: #d32f2f;
+}
+
+.update-button:hover {
+  background-color: #1976D2;
+}
+
+@media (max-width: 768px) {
+  .order-item-card {
+    flex-direction: column;
+  }
+  
+  .map-container {
+    min-height: 200px;
+  }
 }
