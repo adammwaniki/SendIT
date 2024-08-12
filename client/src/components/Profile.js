@@ -6,7 +6,6 @@ import '../css/Profile.css';
 const validationSchema = Yup.object({
   first_name: Yup.string().required('First name is required'),
   last_name: Yup.string().required('Last name is required'),
-  email: Yup.string().email('Invalid email address').required('Email is required'),
   phone_number: Yup.string().required('Phone number is required'),
   street: Yup.string().required('Street is required'),
   city: Yup.string().required('City is required'),
@@ -22,7 +21,6 @@ function Profile({ user, setUser }) {
     initialValues: {
       first_name: user.first_name,
       last_name: user.last_name,
-      email: user.email,
       phone_number: user.phone_number || '',
       street: user.street || '',
       city: user.city || '',
@@ -85,7 +83,7 @@ function Profile({ user, setUser }) {
                 <input
                   id={field}
                   name={field}
-                  type={field === 'email' ? 'email' : 'text'}
+                  type="text"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values[field]}
