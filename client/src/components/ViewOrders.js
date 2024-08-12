@@ -36,6 +36,7 @@ function ViewOrders({ user }) {
       setParcels(data);
       setFilteredParcels(data);
     } catch (err) {
+      console.error('Error fetching parcels:', err);
       setError('Failed to load parcels. Please try again later.');
     } finally {
       setIsLoading(false);
@@ -46,29 +47,34 @@ function ViewOrders({ user }) {
     setSearchTerm(event.target.value);
   };
 
-  const handleCancelOrder = async (id) => {
-    // Implement cancel functionality if needed
+  const handleParcelCancelled = async (cancelledParcelId) => {
+    try {
+      const response = await fetch(`/parcels/${cancelledParcelId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to cancel parcel');
+      }
+      setParcels(prevParcels => prevParcels.filter(parcel => parcel.id !== cancelledParcelId));
+    } catch (err) {
+      console.error('Error cancelling parcel:', err);
+      setError('Failed to cancel parcel. Please try again later.');
+    }
   };
 
-  const handleUpdateDestination = async (id, newDestination) => {
-    // Implement update destination functionality if needed
+  const handleUpdateDestination = (updatedParcel) => {
+    setParcels(prevParcels => prevParcels.map(parcel => 
+      parcel.id === updatedParcel.id ? updatedParcel : parcel
+    ));
   };
 
-  if (isLoading) return <div>Loading parcels...</div>;
-  if (error) return <div>{error}</div>;
+  if (isLoading) return <div className="loading">Loading parcels...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="view-orders">
       <h2>Your Parcels</h2>
-      {/*<div className="search-container">
-        <input
-          type="text"
-          placeholder="Search by tracking number"
-          value={searchTerm}
-          onChange={handleSearch}
-          className="search-input"
-        />
-      </div>*/}
       <div className="search-container">
       <div className="search-input-wrapper">
         <input
@@ -83,13 +89,13 @@ function ViewOrders({ user }) {
     </div>
       <div className="orders-list">
         {filteredParcels.length === 0 ? (
-          <p>No parcels found.</p>
+          <p className="no-parcels">No parcels found.</p>
         ) : (
           filteredParcels.map(parcel => (
             <OrderItemCard 
               key={parcel.id}
               parcel={parcel}
-              onCancel={handleCancelOrder}
+              onCancel={handleParcelCancelled}
               onUpdateDestination={handleUpdateDestination}
             />
           ))
@@ -100,3 +106,16 @@ function ViewOrders({ user }) {
 }
 
 export default ViewOrders;
+      {/*<div className="search-container">
+      <div className="search-input-wrapper">
+        <input
+          type="text"
+          placeholder="Search by tracking number"
+          value={searchTerm}
+          onChange={handleSearch}
+          className="search-input"
+        />
+        <i className="fa fa-search search-icon"></i>
+      </div>
+    </div>*/}
+      
