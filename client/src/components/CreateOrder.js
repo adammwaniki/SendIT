@@ -75,7 +75,7 @@ function CreateOrder({ user }) {
     onSubmit: async (values) => {
       try {
         const distance = await calculateDistance(user.city, user.country, recipientFormik.values.city, recipientFormik.values.country);
-        const calculatedCost = calculateCost(distance, values);
+        const calculatedCost = calculateCost(distance);
         setCost(calculatedCost);
 
         const parcelData = {
@@ -128,10 +128,14 @@ function CreateOrder({ user }) {
     });
   };
 
-  const calculateCost = (distance, parcel) => {
+  /*const calculateCost = (distance, parcel) => {
     const volumetricWeight = (parcel.length * parcel.width * parcel.height) / 5000;
     const chargeableWeight = Math.max(volumetricWeight, parcel.weight);
     return parseFloat((distance * 0.1 + chargeableWeight * 2).toFixed(2));
+  };*/
+  const calculateCost = (distance) => {
+  
+    return parseFloat((distance * 0.05).toFixed(2));
   };
 
   return (

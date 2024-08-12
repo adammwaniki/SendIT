@@ -59,7 +59,7 @@ function GetQuote({ user }) {
           setDirections(result);
           const distance = result.routes[0].legs[0].distance.value / 1000; // km
           const duration = result.routes[0].legs[0].duration.text;
-          const cost = distance * 0.5; // $0.5 per km
+          const cost = distance * 0.05; // $0.05 per km
           setQuoteResult({ distance, duration, cost });
         } else {
           console.error(`error fetching directions ${result}`);
