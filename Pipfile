@@ -12,6 +12,7 @@ flask-security = "*"
 flask-restful = "*"
 flask-migrate = "*"
 flask-cors = "*"
+flask-mail = "*"
 
 [dev-packages]
 
