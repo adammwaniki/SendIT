@@ -160,5 +160,3 @@ class BillingAddress(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f"<BillingAddress(id={self.id}, user_id={self.user_id}, street={self.street}, city={self.city}, state={self.state}, zip_code={self.zip_code}, country={self.country})>"
-
-
