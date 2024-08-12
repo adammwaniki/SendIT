@@ -28,7 +28,7 @@ function App() {
 
   return (
     <LoadScript
-      googleMapsApiKey="GOOGLE_MAPS_API_KEY_HERE"
+      googleMapsApiKey="GOOGLE_MAPS_API_HERE"
       libraries={["geometry", "drawing", "places", "directions"]}
     >
       <div className="App">

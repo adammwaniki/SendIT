@@ -2,13 +2,13 @@
 # /server/app.py
 
 # Remote library imports
-from flask import request, make_response, jsonify, redirect, url_for, session
+from flask import request, make_response, jsonify, session
 from flask_restful import Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 
 from config import app, db, api
-from models import User, Role, Recipient, Parcel, UserAddress, RecipientAddress, BillingAddress
+from models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
 
@@ -20,7 +20,7 @@ def load_user():
 
 @app.before_request
 def check_if_logged_in():
-    whitelist = ['index', 'signup', 'login', 'check_session', 'clear']
+    whitelist = ['index', 'signup', 'login', 'check_session', 'logout']
     if request.endpoint not in whitelist and not load_user():
         return make_response(jsonify({"message": "Unauthorized access"}), 401)
 
@@ -184,8 +184,17 @@ class Recipients(Resource):
     def post(self):
         data = request.get_json()
         new_recipient = Recipient(
-            recipient_full_name=data['recipient_full_name'],
-            phone_number=data['phone_number']
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            phone_number=data['phone_number'],
+            street=data['street'],
+            city=data['city'],
+            state=data['state'],
+            zip_code=data['zip_code'],
+            country=data['country'],
+            latitude=data.get('latitude'),
+            longitude=data.get('longitude')
         )
         db.session.add(new_recipient)
         db.session.commit()
@@ -228,8 +237,9 @@ class Parcels(Resource):
 
     def post(self):
         data = request.get_json()
+        current_user = load_user()
         new_parcel = Parcel(
-            user_id=data['user_id'],
+            user_id=current_user.id,  # Automatically set the user_id from the current session user
             recipient_id=data['recipient_id'],
             length=data['length'],
             width=data['width'],
@@ -271,113 +281,6 @@ class ParcelsByID(Resource):
 
 api.add_resource(ParcelsByID, '/parcels/<int:id>')
 
-# UserAddress resource
-class UserAddresses(Resource):
-    def get(self):
-        response_dict_list = [user_address.to_dict() for user_address in UserAddress.query.all()]
-        return make_response(jsonify(response_dict_list), 200)
-
-    def post(self):
-        data = request.get_json()
-        current_user = load_user()
-        if not current_user:
-            return make_response(jsonify({"message": "Unauthorized"}), 401)
-
-        new_user_address = UserAddress(
-            # user_id=current_user.id,  # Automatically set the user_id from the current session user
-            street=data['street'],
-            city=data['city'],
-            state=data.get('state'),  # Use .get() to handle optional fields
-            zip_code=data.get('zip_code'),
-            country=data['country'],
-            latitude=data.get('latitude'),
-            longitude=data.get('longitude')
-        )
-        db.session.add(new_user_address)
-        db.session.commit()
-        return make_response(jsonify(new_user_address.to_dict()), 201)
-
-api.add_resource(UserAddresses, '/user_addresses')
-
-class UserAddressesByID(Resource):
-    def get(self, id):
-        user_address_specific = UserAddress.query.filter_by(id=id).first()
-        if user_address_specific:
-            return make_response(jsonify(user_address_specific.to_dict()), 200)
-        return make_response(jsonify({"message": "UserAddress not found"}), 404)
-
-    def patch(self, id):
-        user_address_specific = UserAddress.query.filter_by(id=id).first()
-        if user_address_specific:
-            data = request.get_json()
-            for key, value in data.items():
-                if key != 'user_id':  # Avoid updating user_id because i only want it to target the current logged in user
-                    setattr(user_address_specific, key, value)
-            db.session.commit()
-            return make_response(jsonify(user_address_specific.to_dict()), 200)
-        return make_response(jsonify({"message": "UserAddress not found"}), 404)
-
-    def delete(self, id):
-        user_address_specific = UserAddress.query.filter_by(id=id).first()
-        if user_address_specific:
-            db.session.delete(user_address_specific)
-            db.session.commit()
-            return make_response({}, 204)
-        return make_response(jsonify({"message": "UserAddress not found"}), 404)
-
-api.add_resource(UserAddressesByID, '/user_addresses/<int:id>')
-
-# RecipientAddress resource
-class RecipientAddresses(Resource):
-    def get(self):
-        response_dict_list = [recipient_address.to_dict() for recipient_address in RecipientAddress.query.all()]
-        return make_response(jsonify(response_dict_list), 200)
-
-    def post(self):
-        data = request.get_json()
-        new_recipient_address = RecipientAddress(
-            #recipients=data['recipient_id'], # I removed this from the models
-            street=data['street'],
-            city=data['city'],
-            state=data['state'],
-            zip_code=data['zip_code'],
-            country=data['country'],
-            latitude=data['latitude'],
-            longitude=data['longitude']
-        )
-        db.session.add(new_recipient_address)
-        db.session.commit()
-        return make_response(jsonify(new_recipient_address.to_dict()), 201)
-
-api.add_resource(RecipientAddresses, '/recipient_addresses')
-
-class RecipientAddressesByID(Resource):
-    def get(self, id):
-        recipient_address_specific = RecipientAddress.query.filter_by(id=id).first()
-        if recipient_address_specific:
-            return make_response(jsonify(recipient_address_specific.to_dict()), 200)
-        return make_response(jsonify({"message": "RecipientAddress not found"}), 404)
-
-    def patch(self, id):
-        recipient_address_specific = RecipientAddress.query.filter_by(id=id).first()
-        if recipient_address_specific:
-            data = request.get_json()
-            for key, value in data.items():
-                setattr(recipient_address_specific, key, value)
-            db.session.commit()
-            return make_response(jsonify(recipient_address_specific.to_dict()), 200)
-        return make_response(jsonify({"message": "RecipientAddress not found"}), 404)
-
-    def delete(self, id):
-        recipient_address_specific = RecipientAddress.query.filter_by(id=id).first()
-        if recipient_address_specific:
-            db.session.delete(recipient_address_specific)
-            db.session.commit()
-            return make_response({}, 204)
-        return make_response(jsonify({"message": "RecipientAddress not found"}), 404)
-
-api.add_resource(RecipientAddressesByID, '/recipient_addresses/<int:id>')
-
 # BillingAddress resource
 class BillingAddresses(Resource):
     def get(self):
@@ -391,7 +294,7 @@ class BillingAddresses(Resource):
             return make_response(jsonify({"message": "Unauthorized"}), 401)
 
         new_billing_address = BillingAddress(
-            # user_id=current_user.id,  # Automatically set the user_id from the current session user
+            user_id=current_user.id,  # Automatically set the user_id from the current session user
             street=data['street'],
             city=data['city'],
             state=data.get('state'),  # Use .get() to handle optional fields
@@ -435,5 +338,6 @@ api.add_resource(BillingAddressesByID, '/billing_addresses/<int:id>')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
+
 
 
