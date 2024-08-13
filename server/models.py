@@ -94,7 +94,7 @@ class Recipient(db.Model, SerializerMixin):
     id = Column(Integer, primary_key=True)
     first_name = Column(String(130), nullable=False)
     last_name = Column(String(130), nullable=False)
-    email = Column(String(130), unique=True, nullable=False, index=True)
+    email = Column(String(130), unique=False, nullable=False, index=True)
     phone_number = Column(String(50))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     street = Column(Text)
@@ -126,6 +126,13 @@ class Parcel(db.Model, SerializerMixin):
     cost = Column(Numeric(10, 2)) # Precision and scale for measurements
     status = Column(String(50), default='Pending') # Status is either "Accepted", "Out For Delivery" or "Delivered". Default is pending
     tracking_number = Column(String(32), unique=True, default=lambda: str(uuid.uuid4().hex), index=True)
+    street = Column(Text)
+    city = Column(Text, nullable=True) # Will see whether to handle as nullable based on google maps API
+    state = Column(Text)
+    zip_code = Column(String(20))
+    country = Column(String(100), nullable=True) # Will see whether to handle as nullable based on google maps API
+    latitude = Column(Numeric(10, 6)) # Accurate to one micrometer)
+    longitude = Column(Numeric(10, 6)) # Accurate to one micrometer)
     created_at = Column(DateTime(timezone=True), server_default=func.current_timestamp())
     updated_at = Column(DateTime(timezone=True), server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
