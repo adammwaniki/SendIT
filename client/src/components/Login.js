@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import '../css/Login.css';
 
 const validationSchema = Yup.object({
@@ -15,6 +16,7 @@ const validationSchema = Yup.object({
 
 function Login({ setActivePage, onSignIn }) {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
@@ -37,6 +39,13 @@ function Login({ setActivePage, onSignIn }) {
         if (response.ok) {
           console.log('Login successful:', data);
           onSignIn();
+
+          // Redirect based on admin status
+          if (data.user.isAdmin) {
+            navigate('/admin/view-orders');
+          } else {
+            navigate('/dashboard');
+          }
         } else {
           formik.setStatus(data.message || 'Invalid email or password');
         }
