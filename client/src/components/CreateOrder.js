@@ -1,328 +1,207 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import '../css/CreateOrder.css';
 
-function CreateOrder() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [userId, setUserId] = useState(null);
-  const [userAddress, setUserAddress] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    country: '',
-    latitude: '',
-    longitude: ''
-  });
-  const [recipient, setRecipient] = useState({
-    recipient_full_name: '',
-    phone_number: ''
-  });
-  const [recipientId, setRecipientId] = useState(null);
-  const [recipientAddress, setRecipientAddress] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    country: '',
-    latitude: '',
-    longitude: ''
-  });
-  const [parcel, setParcel] = useState({
-    length: '',
-    width: '',
-    height: '',
-    weight: '',
-    cost: '',
-    status: 'Pending'
-  });
+const validationSchema = Yup.object({
+  first_name: Yup.string().required('Required'),
+  last_name: Yup.string().required('Required'),
+  email: Yup.string().email('Invalid email address').required('Required'),
+  phone_number: Yup.string().required('Required'),
+  street: Yup.string().required('Required'),
+  city: Yup.string().required('Required'),
+  state: Yup.string().required('Required'),
+  zip_code: Yup.string().required('Required'),
+  country: Yup.string().required('Required'),
+});
 
-  useEffect(() => {
-    const checkSession = async () => {
+const parcelValidationSchema = Yup.object({
+  length: Yup.number().positive('Must be positive').required('Required'),
+  width: Yup.number().positive('Must be positive').required('Required'),
+  height: Yup.number().positive('Must be positive').required('Required'),
+  weight: Yup.number().positive('Must be positive').required('Required'),
+});
+
+function CreateOrder({ user }) {
+  const [recipientCreated, setRecipientCreated] = useState(false);
+  const [recipientId, setRecipientId] = useState(null);
+  const [parcelCreated, setParcelCreated] = useState(false);
+  const [cost, setCost] = useState(null);
+  const [directions, setDirections] = useState(null);
+
+  const recipientFormik = useFormik({
+    initialValues: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone_number: '',
+      street: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      country: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
       try {
-        const response = await fetch('/check_session', {
-          method: 'GET',
-          credentials: 'include'
+        const response = await fetch('/recipients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+          credentials: 'include',
         });
+        const data = await response.json();
         if (response.ok) {
-          const userData = await response.json();
-          setUserId(userData.id);
+          setRecipientId(data.id);
+          setRecipientCreated(true);
         } else {
-          console.error('User not logged in');
+          console.error('Failed to create recipient:', data.message);
         }
       } catch (error) {
-        console.error('Error checking session:', error);
+        console.error('Error creating recipient:', error);
       }
-    };
+    },
+  });
 
-    checkSession();
-  }, []);
+  const parcelFormik = useFormik({
+    initialValues: {
+      length: '',
+      width: '',
+      height: '',
+      weight: '',
+    },
+    validationSchema: parcelValidationSchema,
+    onSubmit: async (values) => {
+      try {
+        const distance = await calculateDistance(user.city, user.country, recipientFormik.values.city, recipientFormik.values.country);
+        const calculatedCost = calculateCost(distance);
+        setCost(calculatedCost);
 
-  const handleUserAddressSubmit = async (e) => {
-    e.preventDefault();
-    if (!userId) {
-      console.error('User ID is not available');
-      return;
-    }
-    try {
-      const response = await fetch('/user_addresses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...userAddress,
-          user_id: userId
-        }),
-        credentials: 'include'
-      });
-      if (response.ok) {
-        setCurrentStep(2);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to submit user address:', errorData);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleRecipientSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/recipients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(recipient),
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setRecipientId(data.id);
-        setCurrentStep(3);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to submit recipient:', errorData);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleRecipientAddressSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/recipient_addresses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...recipientAddress,
-          recipient_id: recipientId
-        }),
-        credentials: 'include'
-      });
-      if (response.ok) {
-        setCurrentStep(4);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to submit recipient address:', errorData);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleCreateOrder = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/parcels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
+        const parcelData = {
           recipient_id: recipientId,
-          length: parseFloat(parcel.length),
-          width: parseFloat(parcel.width),
-          height: parseFloat(parcel.height),
-          weight: parseFloat(parcel.weight),
-          cost: parseFloat(parcel.cost),
-          status: parcel.status
-        }),
-        credentials: 'include'
-      });
-      if (response.ok) {
-        console.log('Order created successfully');
-        setCurrentStep(5);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to create order:', errorData);
+          length: parseFloat(values.length),
+          width: parseFloat(values.width),
+          height: parseFloat(values.height),
+          weight: parseFloat(values.weight),
+          cost: calculatedCost,
+          status: 'pending'
+        };
+
+        const response = await fetch('/parcels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parcelData),
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setParcelCreated(true);
+        } else {
+          console.error('Failed to create parcel:', data.message);
+        }
+      } catch (error) {
+        console.error('Error creating parcel:', error);
       }
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    },
+  });
+
+  const calculateDistance = (originCity, originCountry, destCity, destCountry) => {
+    return new Promise((resolve, reject) => {
+      const directionsService = new window.google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: `${originCity}, ${originCountry}`,
+          destination: `${destCity}, ${destCountry}`,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            setDirections(result);
+            const distance = result.routes[0].legs[0].distance.value / 1000; // Convert to km
+            resolve(distance);
+          } else {
+            reject('Failed to calculate distance');
+          }
+        }
+      );
+    });
+  };
+
+  /*const calculateCost = (distance, parcel) => {
+    const volumetricWeight = (parcel.length * parcel.width * parcel.height) / 5000;
+    const chargeableWeight = Math.max(volumetricWeight, parcel.weight);
+    return parseFloat((distance * 0.1 + chargeableWeight * 2).toFixed(2));
+  };*/
+  const calculateCost = (distance) => {
+  
+    return parseFloat((distance * 0.05).toFixed(2));
   };
 
   return (
     <div className="create-order">
       <h2>Create Order</h2>
-      <div className="order-form">
-        {/* User Address Form */}
-        <form onSubmit={handleUserAddressSubmit} style={{display: currentStep === 1 ? 'block' : 'none'}}>
-          <input
-            type="text"
-            value={userAddress.street}
-            onChange={(e) => setUserAddress({...userAddress, street: e.target.value})}
-            placeholder="Street"
-            required
-          />
-          <input
-            type="text"
-            value={userAddress.city}
-            onChange={(e) => setUserAddress({...userAddress, city: e.target.value})}
-            placeholder="City"
-            required
-          />
-          <input
-            type="text"
-            value={userAddress.state}
-            onChange={(e) => setUserAddress({...userAddress, state: e.target.value})}
-            placeholder="State"
-          />
-          <input
-            type="text"
-            value={userAddress.zip_code}
-            onChange={(e) => setUserAddress({...userAddress, zip_code: e.target.value})}
-            placeholder="ZIP Code"
-          />
-          <input
-            type="text"
-            value={userAddress.country}
-            onChange={(e) => setUserAddress({...userAddress, country: e.target.value})}
-            placeholder="Country"
-            required
-          />
-          <input
-            type="text"
-            value={userAddress.latitude}
-            onChange={(e) => setUserAddress({...userAddress, latitude: e.target.value})}
-            placeholder="Latitude"
-          />
-          <input
-            type="text"
-            value={userAddress.longitude}
-            onChange={(e) => setUserAddress({...userAddress, longitude: e.target.value})}
-            placeholder="Longitude"
-          />
-          <button type="submit" disabled={currentStep !== 1 || !userId}>Submit Sender Address</button>
+      {!recipientCreated ? (
+        <form onSubmit={recipientFormik.handleSubmit} className="order-form">
+          <div className="form-fields">
+            {Object.keys(recipientFormik.values).map((field) => (
+              <div key={field} className="form-group">
+                <label htmlFor={field}>{field.replace('_', ' ').toUpperCase()}</label>
+                <input
+                  id={field}
+                  name={field}
+                  type="text"
+                  onChange={recipientFormik.handleChange}
+                  onBlur={recipientFormik.handleBlur}
+                  value={recipientFormik.values[field]}
+                />
+                {recipientFormik.touched[field] && recipientFormik.errors[field] ? (
+                  <div className="error">{recipientFormik.errors[field]}</div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <button type="submit" className="submit-button" disabled={recipientCreated}>Add Recipient</button>
         </form>
-
-        {/* Recipient Information Form */}
-        <form onSubmit={handleRecipientSubmit} style={{display: currentStep === 2 ? 'block' : 'none'}}>
-          <input
-            type="text"
-            value={recipient.recipient_full_name}
-            onChange={(e) => setRecipient({...recipient, recipient_full_name: e.target.value})}
-            placeholder="Full Name"
-            required
-          />
-          <input
-            type="tel"
-            value={recipient.phone_number}
-            onChange={(e) => setRecipient({...recipient, phone_number: e.target.value})}
-            placeholder="Phone Number"
-            required
-          />
-          <button type="submit" disabled={currentStep !== 2}>Submit Recipient Information</button>
+      ) : !parcelCreated ? (
+        <form onSubmit={parcelFormik.handleSubmit} className="order-form">
+          <div className="form-fields">
+            {Object.keys(parcelFormik.values).map((field) => (
+              <div key={field} className="form-group">
+                <label htmlFor={field}>{field.toUpperCase()}</label>
+                <input
+                  id={field}
+                  name={field}
+                  type="number"
+                  onChange={parcelFormik.handleChange}
+                  onBlur={parcelFormik.handleBlur}
+                  value={parcelFormik.values[field]}
+                />
+                {parcelFormik.touched[field] && parcelFormik.errors[field] ? (
+                  <div className="error">{parcelFormik.errors[field]}</div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <button type="submit" className="submit-button">Add Parcel</button>
         </form>
-
-        {/* Recipient Address Form */}
-        <form onSubmit={handleRecipientAddressSubmit} style={{display: currentStep === 3 ? 'block' : 'none'}}>
-          <input
-            type="text"
-            value={recipientAddress.street}
-            onChange={(e) => setRecipientAddress({...recipientAddress, street: e.target.value})}
-            placeholder="Street"
-            required
-          />
-          <input
-            type="text"
-            value={recipientAddress.city}
-            onChange={(e) => setRecipientAddress({...recipientAddress, city: e.target.value})}
-            placeholder="City"
-            required
-          />
-          <input
-            type="text"
-            value={recipientAddress.state}
-            onChange={(e) => setRecipientAddress({...recipientAddress, state: e.target.value})}
-            placeholder="State"
-          />
-          <input
-            type="text"
-            value={recipientAddress.zip_code}
-            onChange={(e) => setRecipientAddress({...recipientAddress, zip_code: e.target.value})}
-            placeholder="ZIP Code"
-          />
-          <input
-            type="text"
-            value={recipientAddress.country}
-            onChange={(e) => setRecipientAddress({...recipientAddress, country: e.target.value})}
-            placeholder="Country"
-            required
-          />
-          <input
-            type="text"
-            value={recipientAddress.latitude}
-            onChange={(e) => setRecipientAddress({...recipientAddress, latitude: e.target.value})}
-            placeholder="Latitude"
-          />
-          <input
-            type="text"
-            value={recipientAddress.longitude}
-            onChange={(e) => setRecipientAddress({...recipientAddress, longitude: e.target.value})}
-            placeholder="Longitude"
-          />
-          <button type="submit" disabled={currentStep !== 3}>Submit Recipient Address</button>
-        </form>
-
-        {/* Parcel Information Form */}
-        <form onSubmit={handleCreateOrder} style={{display: currentStep === 4 ? 'block' : 'none'}}>
-          <input
-            type="number"
-            value={parcel.length}
-            onChange={(e) => setParcel({...parcel, length: e.target.value})}
-            placeholder="Length"
-            required
-          />
-          <input
-            type="number"
-            value={parcel.width}
-            onChange={(e) => setParcel({...parcel, width: e.target.value})}
-            placeholder="Width"
-            required
-          />
-          <input
-            type="number"
-            value={parcel.height}
-            onChange={(e) => setParcel({...parcel, height: e.target.value})}
-            placeholder="Height"
-            required
-          />
-          <input
-            type="number"
-            value={parcel.weight}
-            onChange={(e) => setParcel({...parcel, weight: e.target.value})}
-            placeholder="Weight"
-            required
-          />
-          <input
-            type="number"
-            value={parcel.cost}
-            onChange={(e) => setParcel({...parcel, cost: e.target.value})}
-            placeholder="Cost"
-          />
-          <button type="submit" disabled={currentStep !== 4}>Create Order</button>
-        </form>
-
-        {currentStep === 5 && <p>Order created successfully!</p>}
-      </div>
+      ) : (
+        <div className="order-summary">
+          <h3>Order Created Successfully</h3>
+          <p>Cost: ${cost}</p>
+          {directions && (
+            <div className="map-container">
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '400px' }}
+                zoom={7}
+                center={directions.routes[0].legs[0].start_location}
+              >
+                <DirectionsRenderer directions={directions} />
+              </GoogleMap>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

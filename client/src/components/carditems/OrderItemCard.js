@@ -1,135 +1,318 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import '../../css/OrderItemCard.css';
 
-function OrderItemCard({ order, onCancel, onUpdateDestination }) {
-  const [newDestination, setNewDestination] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+const DESTINATION_CHANGE_FINE = 20; // $20 fine for changing destination
+
+function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
   const [directions, setDirections] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [distance, setDistance] = useState('');
+  const [duration, setDuration] = useState('');
+  const [mapCenter, setMapCenter] = useState(null);
+  const [showSender, setShowSender] = useState(false);
+  const [showRecipient, setShowRecipient] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updatedRecipient, setUpdatedRecipient] = useState({
+    city: parcel.recipient.city,
+    country: parcel.recipient.country,
+    street: parcel.recipient.street,
+    zip_code: parcel.recipient.zip_code,
+    state: parcel.recipient.state
+  });
 
-  const handleUpdateClick = () => {
-    if (isUpdating) {
-      onUpdateDestination(order.id, newDestination);
-      setIsUpdating(false);
-    } else {
-      setIsUpdating(true);
-    }
-  };
+  const popupRef = useRef(null);
 
-  const mapContainerStyle = {
-    width: '100%',
-    height: '200px'
-  };
+  const userLocation = `${parcel.user.city}, ${parcel.user.country}`;
+  const recipientLocation = `${parcel.recipient.city}, ${parcel.recipient.country}`;
 
   useEffect(() => {
-    if (window.google && window.google.maps) {
-      setIsLoaded(true);
-    }
-  }, []);
+    updateDirections();
+  }, [parcel.recipient]);
 
-  const fetchDirections = useCallback(() => {
-    if (!isLoaded) return;
-
-    const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin: order.currentLocation,
-        destination: order.destination,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK) {
-          setDirections(result);
-          const route = result.routes[0];
-          if (route && route.overview_path) {
-            const midpoint = route.overview_path[Math.floor(route.overview_path.length / 2)];
-            setMapCenter({ lat: midpoint.lat(), lng: midpoint.lng() });
-          }
-        } else {
-          console.error(`error fetching directions ${result}`);
-        }
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setIsUpdating(false);
       }
-    );
-  }, [order.currentLocation, order.destination, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      fetchDirections();
     }
-  }, [fetchDirections, isLoaded]);
 
-  if (!isLoaded) {
-    return <div>Loading map...</div>;
-  }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [popupRef]);
+
+  const updateDirections = () => {
+    if (window.google) {
+      const directionsService = new window.google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: userLocation,
+          destination: recipientLocation,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            setDirections(result);
+            const route = result.routes[0];
+            const distanceInKm = route.legs[0].distance.value / 1000; // Convert meters to kilometers
+            setDistance(route.legs[0].distance.text);
+            setDuration(route.legs[0].duration.text);
+            
+            const bounds = new window.google.maps.LatLngBounds();
+            route.legs[0].steps.forEach((step) => {
+              bounds.extend(step.start_location);
+              bounds.extend(step.end_location);
+            });
+            setMapCenter(bounds.getCenter());
+          } else {
+            console.error('Directions request failed due to ' + status);
+          }
+        }
+      );
+    }
+  };
+
+  const calculateCost = (distanceInKm) => {
+    return (0.05 * distanceInKm).toFixed(2);
+  };
+
+  const handleCancel = async () => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await onCancel(parcel.id);
+      } catch (error) {
+        console.error('Error cancelling order:', error);
+        setError('Failed to cancel order. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleUpdateDestination = async (e) => {
+    e.preventDefault();
+    if (window.confirm(`Updating the destination will incur a $${DESTINATION_CHANGE_FINE} fine in addition to any changes in shipping cost. Do you want to proceed?`)) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // First, update the recipient information
+        const recipientResponse = await fetch(`/recipients/${parcel.recipient_id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedRecipient),
+          credentials: 'include',
+        });
+
+        if (!recipientResponse.ok) {
+          throw new Error('Failed to update recipient information');
+        }
+
+        const updatedRecipientData = await recipientResponse.json();
+
+        // Now, calculate the new cost
+        const directionsService = new window.google.maps.DirectionsService();
+        const result = await new Promise((resolve, reject) => {
+          directionsService.route(
+            {
+              origin: userLocation,
+              destination: `${updatedRecipientData.city}, ${updatedRecipientData.country}`,
+              travelMode: window.google.maps.TravelMode.DRIVING,
+            },
+            (result, status) => {
+              if (status === window.google.maps.DirectionsStatus.OK) {
+                resolve(result);
+              } else {
+                reject(new Error('Failed to calculate new route'));
+              }
+            }
+          );
+        });
+
+        const distanceInKm = result.routes[0].legs[0].distance.value / 1000;
+        const newCost = parseFloat(calculateCost(distanceInKm)) + DESTINATION_CHANGE_FINE;
+
+        // Update the parcel with the new cost
+        const parcelResponse = await fetch(`/parcels/${parcel.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            cost: newCost.toFixed(2),
+            recipient_id: updatedRecipientData.id 
+          }),
+          credentials: 'include',
+        });
+
+        if (!parcelResponse.ok) {
+          throw new Error('Failed to update parcel information');
+        }
+
+        const updatedParcel = await parcelResponse.json();
+        
+        onUpdateDestination(updatedParcel);
+        setIsUpdating(false);
+        updateDirections();
+      } catch (error) {
+        console.error('Error updating destination:', error);
+        setError(error.message || 'An unexpected error occurred while updating the destination');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUpdatedRecipient(prev => ({ ...prev, [name]: value }));
+  };
 
   return (
     <div className="order-item-card">
       <div className="map-container">
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={mapCenter}
-          zoom={7}
-        >
-          {directions && (
-            <DirectionsRenderer
-              directions={directions}
-              options={{
-                suppressMarkers: true,
-                polylineOptions: {
-                  strokeColor: "#FF0000",
-                  strokeOpacity: 0.8,
-                  strokeWeight: 3,
-                },
-              }}
-            />
-          )}
-          <Marker 
-            position={directions?.routes[0]?.legs[0]?.start_location}
-            label="C"
-          />
-          <Marker 
-            position={directions?.routes[0]?.legs[0]?.end_location}
-            label="D"
-          />
-        </GoogleMap>
+        {mapCenter && (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={mapCenter}
+            zoom={10}
+          >
+            {directions && (
+              <>
+                <Marker position={directions.routes[0].legs[0].start_location} label="S" />
+                <Marker position={directions.routes[0].legs[0].end_location} label="R" />
+                <DirectionsRenderer
+                  directions={directions}
+                  options={{
+                    suppressMarkers: true,
+                    polylineOptions: {
+                      strokeColor: "#FF0000",
+                      strokeOpacity: 0.8,
+                      strokeWeight: 2,
+                    },
+                  }}
+                />
+              </>
+            )}
+          </GoogleMap>
+        )}
       </div>
-      <div className="order-details">
-        <h3>Order Number {order.id}</h3>
-        <ul>
-          <li>Status: {order.status}</li>
-          <li>Destination: {isUpdating ? 
-            <input 
-              type="text" 
-              value={newDestination} 
-              onChange={(e) => setNewDestination(e.target.value)}
-            /> : 
-            order.destination}
-          </li>
-          <li>Current Location: {order.currentLocation}</li>
-          {directions && (
-            <li>Estimated Distance: {directions.routes[0].legs[0].distance.text}</li>
-          )}
-          {directions && (
-            <li>Estimated Duration: {directions.routes[0].legs[0].duration.text}</li>
-          )}
-        </ul>
-        <div className="button-container">
-          <button 
-            className="update-btn" 
-            onClick={handleUpdateClick}
-          >
-            {isUpdating ? 'Confirm Update' : 'Update Destination'}
+      <div className="details-container">
+        <div className="parcel-details">
+          <h3>Parcel ID: {parcel.id}</h3>
+          <p><strong>Tracking Number:</strong> {parcel.tracking_number}</p>
+          <p><strong>Status:</strong> {parcel.status}</p>
+          <p><strong>Cost:</strong> ${parcel.cost}</p>
+          <p><strong>Dimensions:</strong> {parcel.length}" x {parcel.width}" x {parcel.height}"</p>
+          <p><strong>Weight:</strong> {parcel.weight} lbs</p>
+          <p><strong>Estimated Distance:</strong> {distance}</p>
+          <p><strong>Estimated Duration:</strong> {duration}</p>
+          
+          <div className="address-section">
+            <button onClick={() => setShowSender(!showSender)} className="toggle-button">
+              {showSender ? 'Hide Sender Info' : 'Show Sender Info'}
+            </button>
+            {showSender && (
+              <div className="address-details">
+                <h4>Sender:</h4>
+                <p>{parcel.user.first_name} {parcel.user.last_name}</p>
+                <p>{parcel.user.street}, {parcel.user.city}, {parcel.user.state} {parcel.user.zip_code}</p>
+                <p>{parcel.user.country}</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="address-section">
+            <button onClick={() => setShowRecipient(!showRecipient)} className="toggle-button">
+              {showRecipient ? 'Hide Recipient Info' : 'Show Recipient Info'}
+            </button>
+            {showRecipient && (
+              <div className="address-details">
+                <h4>Recipient:</h4>
+                <p>{parcel.recipient.first_name} {parcel.recipient.last_name}</p>
+                <p>{parcel.recipient.street}, {parcel.recipient.city}, {parcel.recipient.state} {parcel.recipient.zip_code}</p>
+                <p>{parcel.recipient.country}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="action-buttons">
+          <button onClick={handleCancel} className="cancel-button" disabled={isLoading}>
+            {isLoading ? 'Cancelling...' : 'Cancel Order'}
           </button>
-          <button 
-            className="cancel-btn" 
-            onClick={() => onCancel(order.id)}
-          >
-            Cancel Order
+          <button onClick={() => setIsUpdating(true)} className="update-button">
+            Update Destination
           </button>
         </div>
+        {error && <p className="error-message">{error}</p>}
       </div>
+      {isUpdating && (
+        <div className="popup-backdrop">
+          <div className="popup" ref={popupRef}>
+            <h3>Update Destination</h3>
+            <p className="warning">Note: Updating the destination will incur a ${DESTINATION_CHANGE_FINE} fine in addition to any changes in shipping cost.</p>
+            <form onSubmit={handleUpdateDestination} className="update-form">
+              <input
+                type="text"
+                name="street"
+                value={updatedRecipient.street}
+                onChange={handleInputChange}
+                placeholder="Street"
+                required
+              />
+              <input
+                type="text"
+                name="city"
+                value={updatedRecipient.city}
+                onChange={handleInputChange}
+                placeholder="City"
+                required
+              />
+              <input
+                type="text"
+                name="state"
+                value={updatedRecipient.state}
+                onChange={handleInputChange}
+                placeholder="State"
+                required
+              />
+              <input
+                type="text"
+                name="zip_code"
+                value={updatedRecipient.zip_code}
+                onChange={handleInputChange}
+                placeholder="ZIP Code"
+                required
+              />
+              <input
+                type="text"
+                name="country"
+                value={updatedRecipient.country}
+                onChange={handleInputChange}
+                placeholder="Country"
+                required
+              />
+              <div className="popup-buttons">
+                <button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Updating...' : 'Confirm Update'}
+                </button>
+                <button type="button" onClick={() => setIsUpdating(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
