@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoadScript } from '@react-google-maps/api';
 import Homepage from './components/HomePage';
 import Dashboard from './components/Dashboard';
+import AdminView from './components/AdminView';
+import AdminManage from './components/AdminManage';
 import './App.css';
 
 function App() {
@@ -28,7 +30,7 @@ function App() {
 
   return (
     <LoadScript
-      googleMapsApiKey="GOOGLE_MAPS_API_KEY_HERE"
+      googleMapsApiKey="AIzaSyBZrvf_oBQ0EmEtg8jpDe5e6hki1swgMJQ"
       libraries={["geometry", "drawing", "places", "directions"]}
     >
       <div className="App">
@@ -43,6 +45,15 @@ function App() {
           <Route 
             path="/dashboard" 
             element={isUserSignedIn ? <Dashboard setIsUserSignedIn={setIsUserSignedIn} /> : <Navigate to="/login" />} 
+          />
+          {/* New Admin Routes */}
+          <Route 
+            path="/admin/view-orders" 
+            element={isUserSignedIn ? <AdminView /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/admin/manage-orders/:id" 
+            element={isUserSignedIn ? <AdminManage /> : <Navigate to="/login" />} 
           />
         </Routes>
       </div>

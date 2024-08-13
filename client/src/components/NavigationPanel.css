@@ -1,0 +1,53 @@
+/* NavigationPanel.css */
+.navigation-panel {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    color: white;
+    padding: 1rem;
+    width: 100%; /* Full width */
+    box-sizing: border-box;
+  }
+  
+  .navigation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .navigation-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+  
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .nav-link.active {
+    background-color: white;
+    color: black;
+  }
+  
+  .logout-button {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: none;
+    border: none;
+    color: lightcoral;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  

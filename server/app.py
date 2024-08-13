@@ -7,11 +7,29 @@ from flask_restful import Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
+import functools
+
 
 from config import app, db, api
 from models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
+
+
+# Configuring mail
+# app.config['DEBUG'] = True
+# app.config['TESTING'] = False # This will be true while testing 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587 # May be another value based on the server
+app.config['MAIL_USE_TLS'] = True # Test first to see whether true or false works
+app.config['MAIL_USE_SSL'] = False # Test first to see whether true or false works
+# app.config['MAIL_DEBUG'] = True # same value as the debug
+app.config['MAIL_USERNAME'] = 'adam.ndegwa@student.moringaschool.com'
+app.config['MAIL_PASSWORD'] = 'vnne stxz tbto btnt'
+app.config['MAIL_DEFAULT_SENDER'] = 'adam.ndegwa@student.moringaschool.com'
+# app.config['MAIL_MAX_EMAILS'] = None
+# app.config['MAIL_SUPPRESS_SEND'] = False # Same value as the testing value so that it doesn't have to send emails every time
+# app.config['MAIL_ASCII_ATTACHMENTS'] = False # This will convert the characters that look like normal English
 
 # Initialising Flask-Mail
 mail = Mail(app)
@@ -25,9 +43,16 @@ def load_user():
 @app.before_request
 def check_if_logged_in():
     whitelist = ['index', 'signup', 'login', 'check_session', 'logout']
-    if request.endpoint not in whitelist and not load_user():
-        return make_response(jsonify({"message": "Unauthorized access"}), 401)
+    if request.endpoint is None:
+        return make_response(jsonify({"message": "Invalid endpoint"}), 404)
+    if request.endpoint not in whitelist and not request.endpoint.startswith('admin'):
+        user = load_user()
+        if not user:
+            return make_response(jsonify({"message": "Unauthorized access"}), 401)
+        if request.endpoint.startswith('admin') and not any(role.name == 'admin' for role in user.roles):
+            return make_response(jsonify({"message": "Admin access required"}), 403)
 
+        
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
@@ -66,7 +91,20 @@ class Login(Resource):
         
         if user and check_password_hash(user.password, data['password']):
             session['user_id'] = user.id
-            return {"message": "Login successful"}, 200
+            
+            # Check if the user has an admin role
+            is_admin = any(role.name == 'admin' for role in user.roles)
+            
+            return {
+                "message": "Login successful",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "isAdmin": is_admin
+                }
+            }, 200
         
         return {"message": "Invalid credentials"}, 401
 
@@ -83,11 +121,17 @@ class CheckSession(Resource):
     def get(self):
         user = load_user()
         if user:
-            return user.to_dict()
+            is_admin = any(role.name == 'admin' for role in user.roles)
+            return {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "isAdmin": is_admin
+            }
         return {}, 204
     
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
-
 class Users(Resource):
     def get(self):
         response_dict_list = [user.to_dict() for user in User.query.all()]
@@ -371,6 +415,23 @@ class SendEmail(Resource):
 
 # Add the SendEmail resource to the API
 api.add_resource(SendEmail, '/send-email')
+
+def admin_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = load_user()
+        if user and any(role.name == 'admin' for role in user.roles):
+            return f(*args, **kwargs)
+        return {"message": "Admin access required"}, 403
+    return decorated_function
+
+class AdminDashboard(Resource):
+    @admin_required
+    def get(self):
+        # I will see what admin-specific logic to add here
+        return {"message": "Welcome to the admin dashboard"}, 200
+
+api.add_resource(AdminDashboard, '/admin/dashboard')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
