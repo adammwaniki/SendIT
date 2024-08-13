@@ -1,13 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import avatarImage from '../assets/images/avartar.avif';
 import '../css/Dashboard.css';
 
+const Profile = lazy(() => import('./Profile'));
 const CreateOrder = lazy(() => import('./CreateOrder'));
 const GetQuote = lazy(() => import('./GetQuote'));
 const ViewOrders = lazy(() => import('./ViewOrders'));
-const Profile = lazy(() => import('./Profile')); // New import
 
 function Dashboard({ setIsUserSignedIn }) {
   const [activeLink, setActiveLink] = useState('Get a Quote');
@@ -19,17 +18,28 @@ function Dashboard({ setIsUserSignedIn }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/check_session', {
+        // Step 1: Check session
+        const sessionResponse = await fetch('/check_session', {
           method: 'GET',
           credentials: 'include'
         });
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          checkUserProfile(userData);
-        } else {
+        if (!sessionResponse.ok) {
           throw new Error('Session check failed');
         }
+        const sessionData = await sessionResponse.json();
+       
+        // Step 2: Fetch full user data
+        const userResponse = await fetch(`/users/${sessionData.id}`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+        const userData = await userResponse.json();
+       
+        setUser(userData);
+        checkUserProfile(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);
         setError(error.message);
@@ -45,7 +55,7 @@ function Dashboard({ setIsUserSignedIn }) {
 
   const checkUserProfile = (userData) => {
     const requiredFields = ['phone_number', 'city', 'street', 'country', 'state', 'zip_code'];
-    const hasIncompleteProfile = requiredFields.some(field => userData[field] === null);
+    const hasIncompleteProfile = requiredFields.some(field => !userData[field]);
     if (hasIncompleteProfile) {
       setActiveLink('Profile');
     }
@@ -110,13 +120,7 @@ function Dashboard({ setIsUserSignedIn }) {
         </nav>
       </header>
       <main className="dashboard-content">
-        <div className="profile-view">
-          <img src={user.profileImage || avatarImage} alt="Profile" className="profile-image" />
-          <p className="profile-name">{`${user.first_name} ${user.last_name}`}</p>
-        </div>
-        <div className="main-view">
-          {renderActiveComponent()}
-        </div>
+        {renderActiveComponent()}
       </main>
     </div>
   );

@@ -11,6 +11,7 @@
 .map-container {
   flex: 1;
   min-height: 300px;
+  min-width: 600px;
 }
 
 .details-container {
@@ -23,6 +24,10 @@
 .parcel-details {
   flex-grow: 1;
   text-align: left;
+  align-items: flex-start;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
 }
 
 .parcel-details h3 {

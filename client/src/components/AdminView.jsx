@@ -113,24 +113,24 @@ const AdminView = () => {
       </div>
 
       {/* Parcel List */}
-      <div className="parcel-list">
+      <div className="parcel-list-a">
         {filteredParcels.length === 0 ? (
           <p>No parcels found</p>
         ) : (
           filteredParcels.map(parcel => (
-            <div key={parcel.id} className="parcel-item">
-              <div className="parcel-details">
-                <div className="parcel-detail">
+            <div key={parcel.id} className="parcel-item-a">
+              <div className="parcel-details-a">
+                <div className="parcel-detail-a">
                   <label>Tracking Number:</label>
-                  <div className="parcel-detail-value">{parcel.tracking_number}</div>
+                  <div className="parcel-detail-value-a">{parcel.tracking_number}</div>
                 </div>
-                <div className="parcel-detail">
+                <div className="parcel-detail-a">
                   <label>From:</label>
-                  <div className="parcel-detail-value">{`${parcel.user.first_name} ${parcel.user.last_name}`}</div>
+                  <div className="parcel-detail-value-a">{`${parcel.user.first_name} ${parcel.user.last_name}`}</div>
                 </div>
-                <div className="parcel-detail">
+                <div className="parcel-detail-a">
                   <label>To:</label>
-                  <div className="parcel-detail-value">{`${parcel.recipient.first_name} ${parcel.recipient.last_name}`}</div>
+                  <div className="parcel-detail-value-a">{`${parcel.recipient.first_name} ${parcel.recipient.last_name}`}</div>
                 </div>
                 <Link to={`/admin/manage-orders/${parcel.id}`} className="manage-link">Manage</Link>
               </div>

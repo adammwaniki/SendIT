@@ -35,14 +35,20 @@ const AdminManage = () => {
       await axios.post('/send-email', {
         to: [parcel.user.email],
         subject: 'Parcel Status Update',
-        body: `Dear ${parcel.user.first_name} ${parcel.user.last_name}, the status of your parcel to ${parcel.recipient.first_name} ${parcel.recipient.last_name} is now ${newStatus}. Got a Package? Let's SendIT! `,
+        body: `Dear ${parcel.user.first_name} ${parcel.user.last_name}, 
+        the status of your parcel to ${parcel.recipient.first_name} ${parcel.recipient.last_name} is now ${newStatus}. 
+        Tracking Number: ${parcel.tracking_number} 
+        Got a Package? Let's SendIT! `,
       });
 
       // Send email notification to the recipient
       await axios.post('/send-email', {
         to: [parcel.recipient.email],
         subject: 'Parcel Status Update',
-        body: `Dear ${parcel.recipient.first_name} ${parcel.recipient.last_name}, the status of your parcel from ${parcel.user.first_name} ${parcel.user.last_name} is now ${newStatus}. Got a Package? Let's SendIT! `,
+        body: `Dear ${parcel.recipient.first_name} ${parcel.recipient.last_name}, 
+        the status of your parcel from ${parcel.user.first_name} ${parcel.user.last_name} is now ${newStatus}. 
+        Tracking Number: ${parcel.tracking_number} 
+        Got a Package? Let's SendIT! `,
       });
 
       alert('Status updated and email notifications sent!');
