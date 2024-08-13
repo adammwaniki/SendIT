@@ -1,8 +1,8 @@
-"""Restructures models to include addresses as one to one
+"""Adds parcel current location
 
-Revision ID: 43492d48c364
+Revision ID: 197f727001a3
 Revises: 
-Create Date: 2024-08-11 16:27:14.217182
+Create Date: 2024-08-13 19:20:51.620482
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '43492d48c364'
+revision = '197f727001a3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -32,8 +32,8 @@ def upgrade():
     sa.Column('country', sa.String(length=100), nullable=True),
     sa.Column('latitude', sa.Numeric(precision=10, scale=6), nullable=True),
     sa.Column('longitude', sa.Numeric(precision=10, scale=6), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('fs_uniquifier')
     )
@@ -61,8 +61,8 @@ def upgrade():
     sa.Column('country', sa.String(length=100), nullable=True),
     sa.Column('latitude', sa.Numeric(precision=10, scale=6), nullable=True),
     sa.Column('longitude', sa.Numeric(precision=10, scale=6), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('fs_uniquifier')
     )
@@ -93,8 +93,15 @@ def upgrade():
     sa.Column('cost', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=True),
     sa.Column('tracking_number', sa.String(length=32), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('street', sa.Text(), nullable=True),
+    sa.Column('city', sa.Text(), nullable=True),
+    sa.Column('state', sa.Text(), nullable=True),
+    sa.Column('zip_code', sa.String(length=20), nullable=True),
+    sa.Column('country', sa.String(length=100), nullable=True),
+    sa.Column('latitude', sa.Numeric(precision=10, scale=6), nullable=True),
+    sa.Column('longitude', sa.Numeric(precision=10, scale=6), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.ForeignKeyConstraint(['recipient_id'], ['recipients.id'], name=op.f('fk_parcels_recipient_id_recipients')),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_parcels_user_id_users')),
     sa.PrimaryKeyConstraint('id')
