@@ -104,7 +104,7 @@
 }
 
 /* Parcel List Styles */
-.parcel-list {
+.parcel-list-a {
   list-style-type: none;
   padding: 0;
   width: 80%;
@@ -112,7 +112,7 @@
   margin-top: 2rem; /* Space below search bar */
 }
 
-.parcel-item {
+.parcel-item-a {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   margin-bottom: 10px;
@@ -123,23 +123,23 @@
 }
 
 /* Parcel details styles */
-.parcel-details {
+.parcel-details-a {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.parcel-detail {
+.parcel-detail-a {
   flex: 1;
   margin-right: 1rem;
 }
 
-.parcel-detail label {
+.parcel-detail-a label {
   display: block;
   font-weight: bold;
 }
 
-.parcel-detail-value {
+.parcel-detail-value-a {
   padding: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 4px;

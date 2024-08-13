@@ -30,7 +30,7 @@ function App() {
 
   return (
     <LoadScript
-      googleMapsApiKey="GOOGLE MAPS API KEY HERE"
+      googleMapsApiKey="AIzaSyBZrvf_oBQ0EmEtg8jpDe5e6hki1swgMJQ"
 
       libraries={["geometry", "drawing", "places", "directions"]}
     >
