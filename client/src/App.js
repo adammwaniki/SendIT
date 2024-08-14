@@ -9,6 +9,7 @@ import './App.css';
 
 function App() {
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+  const MAPS_API_KEY = process.env.REACT_APP_MAPS_API_KEY;
 
   useEffect(() => {
     const checkSession = async () => {
@@ -30,7 +31,7 @@ function App() {
 
   return (
     <LoadScript
-      googleMapsApiKey="GOOGLE MAPS API KEY HERE"
+      googleMapsApiKey={`${MAPS_API_KEY}`}
 
       libraries={["geometry", "drawing", "places", "directions"]}
     >

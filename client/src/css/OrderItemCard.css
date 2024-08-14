@@ -191,3 +191,20 @@
   font-weight: bold;
   margin-bottom: 15px;
 }
+
+.cancel-button.disabled,
+.update-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+
+.cancel-button:disabled,
+.update-button:disabled {
+  pointer-events: none;
+}
+
+.cancel-button.disabled:hover,
+.update-button.disabled:hover {
+  background-color: #ccc;
+}

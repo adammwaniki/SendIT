@@ -121,6 +121,7 @@ const AdminManage = () => {
           <p>Cost: ${parcel.cost}</p>
           <p>Status: {parcel.status}</p>
           <select className={`status-select ${getStatusClass(status)}`} value={status} onChange={handleStatusChange}>
+            <option value="Pending">Pending</option>
             <option value="Accepted">Accepted</option>
             <option value="Out For Delivery">Out For Delivery</option>
             <option value="Delivered">Delivered</option>

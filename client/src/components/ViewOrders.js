@@ -26,8 +26,12 @@ function ViewOrders({ user }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/parcels?user_id=${user.id}`, {
-        credentials: 'include'
+      const response = await fetch('/user/parcels', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       if (!response.ok) {
         throw new Error('Failed to fetch parcels');
@@ -76,17 +80,17 @@ function ViewOrders({ user }) {
     <div className="view-orders">
       <h2>Your Parcels</h2>
       <div className="search-container">
-      <div className="search-input-wrapper">
-        <input
-          type="text"
-          placeholder="Search by tracking number"
-          value={searchTerm}
-          onChange={handleSearch}
-          className="search-input"
-        />
-        <i className="fa fa-search search-icon"></i>
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            placeholder="Search by tracking number"
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
+          />
+          <i className="fa fa-search search-icon"></i>
+        </div>
       </div>
-    </div>
       <div className="orders-list">
         {filteredParcels.length === 0 ? (
           <p className="no-parcels">No parcels found.</p>
@@ -106,16 +110,3 @@ function ViewOrders({ user }) {
 }
 
 export default ViewOrders;
-      {/*<div className="search-container">
-      <div className="search-input-wrapper">
-        <input
-          type="text"
-          placeholder="Search by tracking number"
-          value={searchTerm}
-          onChange={handleSearch}
-          className="search-input"
-        />
-        <i className="fa fa-search search-icon"></i>
-      </div>
-    </div>*/}
-      
