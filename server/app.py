@@ -14,8 +14,8 @@ import os
 load_dotenv()
 
 
-from config import app, db, api
-from models import User, Role, Recipient, Parcel, BillingAddress
+from server.config import app, db, api
+from server.models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
 

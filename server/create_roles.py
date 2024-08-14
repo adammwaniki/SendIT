@@ -2,8 +2,8 @@
 from app import Role, User, db
 
 def create_roles():
-    admin = Role(id=1, name='Admin')
-    user = Role(id=2, name='User')
+    admin = Role(id=1, name='admin')
+    user = Role(id=2, name='user')
 
     db.session.add(admin)
     db.session.add(user)
