@@ -9,7 +9,7 @@ from flask_security import UserMixin, RoleMixin
 import uuid
 import re
 
-from server.config import db
+from config import db
 
 # Association tables for many-to-many relationships
 roles_users = db.Table('roles_users',

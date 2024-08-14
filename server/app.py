@@ -14,8 +14,8 @@ import os
 load_dotenv()
 
 
-from server.config import app, db, api
-from server.models import User, Role, Recipient, Parcel, BillingAddress
+from config import app, db, api
+from models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
 
@@ -72,10 +72,15 @@ def check_if_logged_in():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    if path != "" and os.path.exists(app.static_folder + '/' + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
+    if path != "":
+        full_path = os.path.join(app.static_folder, path)
+        if os.path.exists(full_path):
+            print(f"Serving file from: {full_path}")  # Debug log
+            return send_from_directory(app.static_folder, path)
+        else:
+            print(f"File not found: {full_path}")  # Debug log
+    return send_from_directory(app.static_folder, 'index.html')
+
 
 # User resource
 class Signup(Resource):
@@ -465,8 +470,8 @@ class ParcelsByUserID(Resource):
 api.add_resource(ParcelsByUserID, '/user/parcels')
 
 if __name__ == '__main__':
-    #app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5555)), debug=False)
+    app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
+    #app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5555)), debug=False)
     #pass
 
 
