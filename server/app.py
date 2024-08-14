@@ -51,7 +51,14 @@ def load_user():
 
 @app.before_request
 def check_if_logged_in():
-    whitelist = ['index', 'signup', 'login', 'check_session', 'logout']
+    # List of static file serving paths or patterns
+    static_paths = ['/static', '/favicon.ico']
+    
+    # Check if the request path starts with any of the static paths
+    if any(request.path.startswith(path) for path in static_paths):
+        return
+    
+    whitelist = ['index', 'signup', 'login', 'check_session', 'logout','serve_static_files']
     if request.endpoint is None:
         return make_response(jsonify({"message": "Invalid endpoint"}), 404)
     if request.endpoint not in whitelist and not request.endpoint.startswith('admin'):
@@ -459,7 +466,8 @@ api.add_resource(ParcelsByUserID, '/user/parcels')
 
 if __name__ == '__main__':
     #app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5555)), debug=False)
+    #app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5555)), debug=False)
+    pass
 
 
 
