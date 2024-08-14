@@ -69,17 +69,13 @@ def check_if_logged_in():
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
 
-# Serve static files from the React build folder
-@app.route('/static/<path:path>')
-def serve_static_files(path):
-    return send_from_directory(os.path.join(app.static_folder, 'static'), path)
-
-# Serve the main HTML file for all non-API routes
-@app.route('/<path:path>', defaults={'path': ''})
-def serve_react_app(path):
-    if path.startswith('api/'):
-        return serve_api(path)  # Make sure API routes are handled
-    return send_from_directory(app.static_folder, 'index.html')
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 # User resource
 class Signup(Resource):
