@@ -68,14 +68,18 @@ def check_if_logged_in():
         if request.endpoint.startswith('admin') and not any(role.name == 'admin' for role in user.roles):
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
-        
-@app.route('/')
-def serve_react_app():
-    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/<path:path>')
+# Serve static files from the React build folder
+@app.route('/static/<path:path>')
 def serve_static_files(path):
-    return send_from_directory(app.static_folder, path)
+    return send_from_directory(os.path.join(app.static_folder, 'static'), path)
+
+# Serve the main HTML file for all non-API routes
+@app.route('/<path:path>', defaults={'path': ''})
+def serve_react_app(path):
+    if path.startswith('api/'):
+        return serve_api(path)  # Make sure API routes are handled
+    return send_from_directory(app.static_folder, 'index.html')
 
 # User resource
 class Signup(Resource):
