@@ -52,13 +52,13 @@ def load_user():
 @app.before_request
 def check_if_logged_in():
     # List of static file serving paths or patterns
-    static_paths = ['/static', '/favicon.ico']
+    static_paths = ['/static', '/favicon.ico', '/']
     
     # Check if the request path starts with any of the static paths
     if any(request.path.startswith(path) for path in static_paths):
         return
     
-    whitelist = ['index', 'signup', 'login', 'check_session', 'logout','serve_static_files']
+    whitelist = ['index', 'signup', 'login', 'check_session', 'logout', 'serve_static_files']
     if request.endpoint is None:
         return make_response(jsonify({"message": "Invalid endpoint"}), 404)
     if request.endpoint not in whitelist and not request.endpoint.startswith('admin'):
