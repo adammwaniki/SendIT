@@ -35,7 +35,7 @@ function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
         {activePage === 'login' && <Login setActivePage={setActivePage} onSignIn={handleSignIn} />}
       </main>
       <footer>
-        <p>SendIT: Delivering Smiles. One Parcel at a Time!</p>
+        <p>SendIT :  Delivering Smiles One Parcel at a Time!</p>
       </footer>
     </div>
   );

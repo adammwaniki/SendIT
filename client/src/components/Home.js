@@ -5,7 +5,7 @@ function Home({ setActivePage }) {
   return (
     <div className="home">
       <p className="slogan">
-        Got a package <span className="highlight">SendIT</span> for you!
+        Got a package? <span className="highlight">Let's SendIT</span> for you!
       </p>
       <div className="buttons">
         <button onClick={() => setActivePage('register')}>Sign Up</button>
