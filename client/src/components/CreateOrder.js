@@ -3,6 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import '../css/CreateOrder.css';
+import {API_BASE_URL} from '../config';
 
 const validationSchema = Yup.object({
   first_name: Yup.string().required('Required'),
@@ -45,7 +46,7 @@ function CreateOrder({ user }) {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await fetch('/recipients', {
+        const response = await fetch(`${API_BASE_URL}/recipients`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(values),
@@ -88,7 +89,7 @@ function CreateOrder({ user }) {
           status: 'pending'
         };
 
-        const response = await fetch('/parcels', {
+        const response = await fetch(`${API_BASE_URL}/parcels`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(parcelData),

@@ -1,5 +1,7 @@
 import React from 'react';
 import '../css/Home.css';
+//import {API_BASE_URL} from '../config';
+
 
 function Home({ setActivePage }) {
   return (

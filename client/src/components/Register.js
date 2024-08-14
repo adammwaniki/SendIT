@@ -3,6 +3,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
 import '../css/Register.css';
+import {API_BASE_URL} from '../config';
+
 
 const validationSchema = Yup.object({
   firstName: Yup.string()
@@ -38,7 +40,7 @@ function Register({ setActivePage, onRegisterSuccess }) {
     onSubmit: async (values) => {
       setIsLoading(true);
       try {
-        const response = await fetch('/signup', {
+        const response = await fetch(`${API_BASE_URL}/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

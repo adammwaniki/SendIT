@@ -2,6 +2,8 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import '../css/Dashboard.css';
+import {API_BASE_URL} from '../config';
+
 
 const Profile = lazy(() => import('./Profile'));
 const CreateOrder = lazy(() => import('./CreateOrder'));
@@ -19,7 +21,7 @@ function Dashboard({ setIsUserSignedIn }) {
     const fetchUserData = async () => {
       try {
         // Step 1: Check session
-        const sessionResponse = await fetch('/check_session', {
+        const sessionResponse = await fetch(`${API_BASE_URL}/check_session`, {
           method: 'GET',
           credentials: 'include'
         });
@@ -29,7 +31,7 @@ function Dashboard({ setIsUserSignedIn }) {
         const sessionData = await sessionResponse.json();
        
         // Step 2: Fetch full user data
-        const userResponse = await fetch(`/users/${sessionData.id}`, {
+        const userResponse = await fetch(`${API_BASE_URL}/users/${sessionData.id}`, {
           method: 'GET',
           credentials: 'include'
         });
@@ -63,7 +65,7 @@ function Dashboard({ setIsUserSignedIn }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/logout', {
+      const response = await fetch(`${API_BASE_URL}/logout`, {
         method: 'DELETE',
         credentials: 'include'
       });

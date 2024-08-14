@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import '../css/Profile.css';
+import {API_BASE_URL} from '../config';
+
 
 const validationSchema = Yup.object({
   first_name: Yup.string().required('First name is required'),
@@ -31,7 +33,7 @@ function Profile({ user, setUser }) {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await fetch(`/users/${user.id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(values),

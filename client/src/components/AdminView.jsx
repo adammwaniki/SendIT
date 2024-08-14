@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 import '../css/AdminView.css'; // Import the CSS file
+import {API_BASE_URL} from '../config';
+
 
 const AdminView = () => {
   const [parcels, setParcels] = useState([]);
@@ -14,7 +16,7 @@ const AdminView = () => {
   useEffect(() => {
     const fetchParcels = async () => {
       try {
-        const response = await axios.get('/parcels'); // API returns all parcels
+        const response = await axios.get(`${API_BASE_URL}/parcels`); // API returns all parcels
         setParcels(response.data);
       } catch (error) {
         setError('Error fetching parcels. Please try again later.');
@@ -55,12 +57,12 @@ const AdminView = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/logout', {
+      const response = await fetch(`${API_BASE_URL}/logout`, {
         method: 'DELETE',
         credentials: 'include' // Include credentials (cookies) with the request
       });
       if (response.ok) {
-        window.location.href = '/login'; // Redirect to login page after successful logout
+        window.location.href = `${API_BASE_URL}/login`; // Redirect to login page after successful logout
       } else {
         throw new Error('Logout failed');
       }
@@ -79,7 +81,7 @@ const AdminView = () => {
         <div className="navbar-content">
           <div className="navbar-title">Admin Dashboard</div>
           <div className="navbar-nav">
-            <Link to="/admin/view-orders" className={`nav-link ${activeLink === 'View Orders' ? 'active' : ''}`}>View Orders</Link>
+            <Link to={`${API_BASE_URL}/admin/view-orders`} className={`nav-link ${activeLink === 'View Orders' ? 'active' : ''}`}>View Orders</Link>
             {/* Removed link to Manage Order due to undefined parcel */}
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>
@@ -132,7 +134,7 @@ const AdminView = () => {
                   <label>To:</label>
                   <div className="parcel-detail-value-a">{`${parcel.recipient.first_name} ${parcel.recipient.last_name}`}</div>
                 </div>
-                <Link to={`/admin/manage-orders/${parcel.id}`} className="manage-link">Manage</Link>
+                <Link to={`${API_BASE_URL}/admin/manage-orders/${parcel.id}`} className="manage-link">Manage</Link>
               </div>
             </div>
           ))
