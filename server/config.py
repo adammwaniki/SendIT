@@ -3,7 +3,7 @@
 # Standard library imports
 
 # Remote library imports
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
@@ -19,7 +19,7 @@ load_dotenv()
 DATABASE_URI = os.getenv("DATABASE_URI")
 
 # Instantiate app, set attributes
-app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 # In production it is preferable to use a fixed and securely generated secret key instead of a random one each time the server restarts.
 app.config['SECRET_KEY'] = os.urandom(24) # This will generate a random 24bit secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = f'{DATABASE_URI}'

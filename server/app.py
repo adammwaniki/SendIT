@@ -2,7 +2,7 @@
 # /server/app.py
 
 # Remote library imports
-from flask import request, make_response, jsonify, session
+from flask import request, make_response, jsonify, session, send_from_directory
 from flask_restful import Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
@@ -63,8 +63,12 @@ def check_if_logged_in():
 
         
 @app.route('/')
-def index():
-    return '<h1>Project Server</h1>'
+def serve_react_app():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static_files(path):
+    return send_from_directory(app.static_folder, path)
 
 # User resource
 class Signup(Resource):
@@ -454,8 +458,8 @@ class ParcelsByUserID(Resource):
 api.add_resource(ParcelsByUserID, '/user/parcels')
 
 if __name__ == '__main__':
-    #app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
-    pass
+    app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
+    #pass
 
 
 
