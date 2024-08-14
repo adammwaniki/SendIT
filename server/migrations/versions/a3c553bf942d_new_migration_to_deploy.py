@@ -1,8 +1,8 @@
-"""Adds parcel current location
+"""New migration to deploy
 
-Revision ID: 197f727001a3
+Revision ID: a3c553bf942d
 Revises: 
-Create Date: 2024-08-13 19:20:51.620482
+Create Date: 2024-08-14 16:55:28.557377
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '197f727001a3'
+revision = 'a3c553bf942d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -38,7 +38,7 @@ def upgrade():
     sa.UniqueConstraint('fs_uniquifier')
     )
     with op.batch_alter_table('recipients', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_recipients_email'), ['email'], unique=True)
+        batch_op.create_index(batch_op.f('ix_recipients_email'), ['email'], unique=False)
 
     op.create_table('roles',
     sa.Column('id', sa.Integer(), nullable=False),
