@@ -455,7 +455,7 @@ api.add_resource(ParcelsByUserID, '/user/parcels')
 
 if __name__ == '__main__':
     #app.run(port=5555, debug=True) # Commenting out so that it doesn't conflict with deployment server
-    app.run()
+    pass
 
 
 
