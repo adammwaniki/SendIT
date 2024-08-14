@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/AdminManage.css'; // Import the CSS file
+import {API_BASE_URL} from '../config';
 
 const AdminManage = () => {
   const { id } = useParams();
@@ -12,7 +13,7 @@ const AdminManage = () => {
   useEffect(() => {
     const fetchParcel = async () => {
       try {
-        const response = await axios.get(`/parcels/${id}`); // Fetch parcel details
+        const response = await axios.get(`${API_BASE_URL}/parcels/${id}`); // Fetch parcel details
         setParcel(response.data);
         setStatus(response.data.status);
       } catch (error) {
@@ -29,10 +30,10 @@ const AdminManage = () => {
 
     try {
       // Update parcel status
-      await axios.patch(`/parcels/${id}`, { status: newStatus });
+      await axios.patch(`${API_BASE_URL}/parcels/${id}`, { status: newStatus });
 
       // Send email notification to the user
-      await axios.post('/send-email', {
+      await axios.post(`${API_BASE_URL}/send-email`, {
         to: [parcel.user.email],
         subject: 'Parcel Status Update',
         body: `Dear ${parcel.user.first_name} ${parcel.user.last_name}, 
@@ -42,7 +43,7 @@ const AdminManage = () => {
       });
 
       // Send email notification to the recipient
-      await axios.post('/send-email', {
+      await axios.post(`${API_BASE_URL}/send-email`, {
         to: [parcel.recipient.email],
         subject: 'Parcel Status Update',
         body: `Dear ${parcel.recipient.first_name} ${parcel.recipient.last_name}, 
@@ -52,7 +53,7 @@ const AdminManage = () => {
       });
 
       alert('Status updated and email notifications sent!');
-      navigate('/admin/view-orders');
+      navigate(`${API_BASE_URL}/admin/view-orders`);
     } catch (error) {
       console.error('Error updating parcel status or sending email:', error);
     }
@@ -60,12 +61,12 @@ const AdminManage = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/logout', {
+      const response = await fetch(`${API_BASE_URL}/logout`, {
         method: 'DELETE',
         credentials: 'include' // Include credentials (cookies) with the request
       });
       if (response.ok) {
-        navigate('/login'); // Redirect to login page after successful logout
+        navigate(`${API_BASE_URL}/login`); // Redirect to login page after successful logout
       } else {
         throw new Error('Logout failed');
       }
@@ -97,8 +98,8 @@ const AdminManage = () => {
         <div className="navbar-content">
           <div className="navbar-title">Admin Dashboard</div>
           <div className="navbar-nav">
-            <button className="nav-link" onClick={() => navigate('/admin/view-orders')}>View Orders</button>
-            <button className="nav-link active" onClick={() => navigate(`/admin/manage-orders/${id}`)}>Manage Order</button>
+            <button className="nav-link" onClick={() => navigate(`${API_BASE_URL}/admin/view-orders`)}>View Orders</button>
+            <button className="nav-link active" onClick={() => navigate(`${API_BASE_URL}/admin/manage-orders/${id}`)}>Manage Order</button>
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>
         </div>

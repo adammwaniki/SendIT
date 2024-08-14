@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import OrderItemCard from './carditems/OrderItemCard';
 import '../css/ViewOrders.css';
+import {API_BASE_URL} from '../config';
+
 
 function ViewOrders({ user }) {
   const [parcels, setParcels] = useState([]);
@@ -26,7 +28,7 @@ function ViewOrders({ user }) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/user/parcels', {
+      const response = await fetch(`${API_BASE_URL}/user/parcels`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -53,7 +55,7 @@ function ViewOrders({ user }) {
 
   const handleParcelCancelled = async (cancelledParcelId) => {
     try {
-      const response = await fetch(`/parcels/${cancelledParcelId}`, {
+      const response = await fetch(`${API_BASE_URL}/parcels/${cancelledParcelId}`, {
         method: 'DELETE',
         credentials: 'include',
       });

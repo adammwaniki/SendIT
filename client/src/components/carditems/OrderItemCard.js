@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import '../../css/OrderItemCard.css';
+import {API_BASE_URL} from '../../config';
 
 const containerStyle = {
   width: '100%',
@@ -108,7 +109,7 @@ function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
       setError(null);
       try {
         // First, update the recipient information
-        const recipientResponse = await fetch(`/recipients/${parcel.recipient_id}`, {
+        const recipientResponse = await fetch(`${API_BASE_URL}/recipients/${parcel.recipient_id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -146,7 +147,7 @@ function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
         const newCost = parseFloat(calculateCost(distanceInKm)) + DESTINATION_CHANGE_FINE;
 
         // Update the parcel with the new cost
-        const parcelResponse = await fetch(`/parcels/${parcel.id}`, {
+        const parcelResponse = await fetch(`${API_BASE_URL}/parcels/${parcel.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

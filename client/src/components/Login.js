@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import '../css/Login.css';
+import {API_BASE_URL} from '../config';
+
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -27,7 +29,7 @@ function Login({ setActivePage, onSignIn }) {
     onSubmit: async (values) => {
       setIsLoading(true);
       try {
-        const response = await fetch('/login', {
+        const response = await fetch(`${API_BASE_URL}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(values),
@@ -42,9 +44,9 @@ function Login({ setActivePage, onSignIn }) {
 
           // Redirect based on admin status
           if (data.user.isAdmin) {
-            navigate('/admin/view-orders');
+            navigate(`${API_BASE_URL}/admin/view-orders`);
           } else {
-            navigate('/dashboard');
+            navigate(`${API_BASE_URL}/dashboard`);
           }
         } else {
           formik.setStatus(data.message || 'Invalid email or password');

@@ -5,6 +5,8 @@ import Register from './Register';
 import Login from './Login';
 import '../css/Homepage.css';
 import logo from '../assets/images/favicon.ico';
+import {API_BASE_URL} from '../config';
+
 
 function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
     const [activePage, setActivePage] = useState(initialPage);
@@ -16,7 +18,7 @@ function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
 
     const handleSignIn = () => {
       setIsUserSignedIn(true);
-      navigate('/dashboard');
+      navigate(`${API_BASE_URL}/dashboard`);
     };
 
     const handleRegisterSuccess = () => {
