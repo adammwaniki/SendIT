@@ -8,6 +8,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
 import functools
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 from config import app, db, api
@@ -15,18 +19,23 @@ from models import User, Role, Recipient, Parcel, BillingAddress
 
 migrate = Migrate(app, db)
 
+mail_server = os.getenv('mail_server')
+mail_port = os.getenv('mail_port')
+mail_username = os.getenv('mail_username')
+mail_password = os.getenv('mail_password')
+mail_defaul_sender = os.getenv('mail_defaul_sender')
 
 # Configuring mail
 # app.config['DEBUG'] = True
 # app.config['TESTING'] = False # This will be true while testing 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587 # May be another value based on the server
+app.config['MAIL_SERVER'] = f'{mail_server}'
+app.config['MAIL_PORT'] = f'{mail_port}' # May be another value based on the server
 app.config['MAIL_USE_TLS'] = True # Test first to see whether true or false works
 app.config['MAIL_USE_SSL'] = False # Test first to see whether true or false works
 # app.config['MAIL_DEBUG'] = True # same value as the debug
-app.config['MAIL_USERNAME'] = 'adam.ndegwa@student.moringaschool.com'
-app.config['MAIL_PASSWORD'] = 'mail app password here' # will move this to a .env file for safety
-app.config['MAIL_DEFAULT_SENDER'] = 'adam.ndegwa@student.moringaschool.com'
+app.config['MAIL_USERNAME'] = f'{mail_username}'
+app.config['MAIL_PASSWORD'] = f'{mail_password}' # will move this to a .env file for safety
+app.config['MAIL_DEFAULT_SENDER'] = f'{mail_defaul_sender}'
 # app.config['MAIL_MAX_EMAILS'] = None
 # app.config['MAIL_SUPPRESS_SEND'] = False # Same value as the testing value so that it doesn't have to send emails every time
 # app.config['MAIL_ASCII_ATTACHMENTS'] = False # This will convert the characters that look like normal English
@@ -432,6 +441,17 @@ class AdminDashboard(Resource):
         return {"message": "Welcome to the admin dashboard"}, 200
 
 api.add_resource(AdminDashboard, '/admin/dashboard')
+
+class ParcelsByUserID(Resource):
+    def get(self):
+        current_user = load_user()
+        if not current_user:
+            return make_response(jsonify({"message": "Unauthorized"}), 401)
+        
+        parcels = Parcel.query.filter_by(user_id=current_user.id).all()
+        return jsonify([parcel.to_dict() for parcel in parcels])
+
+api.add_resource(ParcelsByUserID, '/user/parcels')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

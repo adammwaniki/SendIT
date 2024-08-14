@@ -49,6 +49,8 @@ function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
     };
   }, [popupRef]);
 
+  const isDelivered = parcel.status === "Delivered";
+
   const updateDirections = () => {
     if (window.google) {
       const directionsService = new window.google.maps.DirectionsService();
@@ -248,12 +250,20 @@ function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
           </div>
         </div>
         <div className="action-buttons">
-          <button onClick={handleCancel} className="cancel-button" disabled={isLoading}>
-            {isLoading ? 'Cancelling...' : 'Cancel Order'}
-          </button>
-          <button onClick={() => setIsUpdating(true)} className="update-button">
-            Update Destination
-          </button>
+        <button 
+          onClick={handleCancel} 
+          className={`cancel-button ${isDelivered ? 'disabled' : ''}`} 
+          disabled={isLoading || isDelivered}
+        >
+          {isLoading ? 'Cancelling...' : 'Cancel Order'}
+        </button>
+        <button 
+          onClick={() => setIsUpdating(true)} 
+          className={`update-button ${isDelivered ? 'disabled' : ''}`}
+          disabled={isDelivered}
+        >
+          Update Destination
+        </button>
         </div>
         {error && <p className="error-message">{error}</p>}
       </div>
