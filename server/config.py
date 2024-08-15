@@ -17,9 +17,10 @@ load_dotenv()
 
 # Environment attributes
 DATABASE_URI = os.getenv("DATABASE_URI")
+#CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # Instantiate app, set attributes
-app = Flask(__name__, static_folder='../client/build', static_url_path='')
+app = Flask(__name__)
 # In production it is preferable to use a fixed and securely generated secret key instead of a random one each time the server restarts.
 app.config['SECRET_KEY'] = os.urandom(24) # This will generate a random 24bit secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = f'{DATABASE_URI}'
@@ -38,10 +39,8 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
-# CORS CONFIGURATIONS
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000', 'https://sendit-wkk7.onrender.com']
 
-# Instantiate CORS
-CORS(app, origins=CORS_ALLOWED_ORIGINS)
-
+# Instantiate CORS now including explicit definition of allowed methods
+#CORS(app, supports_credentials=True, resources={r"/*": {"origins": CORS_ALLOWED_ORIGINS}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
