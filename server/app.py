@@ -69,6 +69,10 @@ def check_if_logged_in():
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
 
+@app.route('/')
+def home():
+    return jsonify({"message": "SendIT API is running"}), 200
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -80,6 +84,10 @@ def serve(path):
         else:
             print(f"File not found: {full_path}")  # Debug log
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/')
+def home():
+    return jsonify({"message": "SendIT API is running"}), 200
 
 
 # User resource
