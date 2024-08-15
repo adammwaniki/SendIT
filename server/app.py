@@ -48,15 +48,15 @@ def load_user():
     if user_id:
         return User.query.get(int(user_id))
     return None
-
+'''
 @app.before_request
 def check_if_logged_in():
     # List of static file serving paths or patterns
-    static_paths = ['/static', '/favicon.ico', '/']
+    #static_paths = ['/static', '/favicon.ico', '/']
     
     # Check if the request path starts with any of the static paths
-    if any(request.path.startswith(path) for path in static_paths):
-        return
+    #if any(request.path.startswith(path) for path in static_paths):
+    #    return
     
     whitelist = ['index', 'signup', 'login', 'check_session', 'logout', 'serve_static_files']
     if request.endpoint is None:
@@ -68,7 +68,7 @@ def check_if_logged_in():
         if request.endpoint.startswith('admin') and not any(role.name == 'admin' for role in user.roles):
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
-
+'''
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -80,8 +80,11 @@ def serve(path):
         else:
             print(f"File not found: {full_path}")  # Debug log
     return send_from_directory(app.static_folder, 'index.html')
-
-
+'''
+@app.route('/')
+def index():
+    return '<h1>Project Server</h1>'
+'''
 # User resource
 class Signup(Resource):
     def post(self):
