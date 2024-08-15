@@ -6,12 +6,14 @@ import Dashboard from './components/Dashboard';
 import AdminView from './components/AdminView';
 import AdminManage from './components/AdminManage';
 import './App.css';
-import {API_BASE_URL} from '../config';
+import {API_BASE_URL} from './config';
 
 
 function App() {
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
   const MAPS_API_KEY = process.env.REACT_APP_MAPS_API_KEY;
+  //const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 
   useEffect(() => {
     const checkSession = async () => {
@@ -40,24 +42,24 @@ function App() {
       <div className="App">
         <Routes>
           <Route 
-            path={`${API_BASE_URL}/`}
-            element={isUserSignedIn ? <Navigate to={`${API_BASE_URL}/dashboard`} /> : <Homepage setIsUserSignedIn={setIsUserSignedIn} />}
+            path={`/`}
+            element={isUserSignedIn ? <Navigate to={`/dashboard`} /> : <Homepage setIsUserSignedIn={setIsUserSignedIn} />}
           >
             <Route path="login" element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="login" />} />
             <Route path="register" element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="register" />} />
           </Route>
           <Route 
-            path={`${API_BASE_URL}/dashboard`} 
-            element={isUserSignedIn ? <Dashboard setIsUserSignedIn={setIsUserSignedIn} /> : <Navigate to={`${API_BASE_URL}/login`} />} 
+            path={`/dashboard`} 
+            element={isUserSignedIn ? <Dashboard setIsUserSignedIn={setIsUserSignedIn} /> : <Navigate to={`/login`} />} 
           />
           {/* New Admin Routes */}
           <Route 
-            path={`${API_BASE_URL}/admin/view-orders`} 
-            element={isUserSignedIn ? <AdminView /> : <Navigate to={`${API_BASE_URL}/login`} />} 
+            path={`/admin/view-orders`} 
+            element={isUserSignedIn ? <AdminView /> : <Navigate to={`/login`} />} 
           />
           <Route 
-            path={`${API_BASE_URL}/admin/manage-orders/:id`} 
-            element={isUserSignedIn ? <AdminManage /> : <Navigate to={`${API_BASE_URL}/login`} />} 
+            path={`/admin/manage-orders/:id`} 
+            element={isUserSignedIn ? <AdminManage /> : <Navigate to={`/login`} />} 
           />
         </Routes>
       </div>

@@ -5,6 +5,9 @@ import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import '../css/CreateOrder.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
+
 const validationSchema = Yup.object({
   first_name: Yup.string().required('Required'),
   last_name: Yup.string().required('Required'),

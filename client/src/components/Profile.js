@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import '../css/Profile.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
 
 const validationSchema = Yup.object({
   first_name: Yup.string().required('First name is required'),

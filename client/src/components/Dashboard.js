@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import '../css/Dashboard.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 const Profile = lazy(() => import('./Profile'));
 const CreateOrder = lazy(() => import('./CreateOrder'));

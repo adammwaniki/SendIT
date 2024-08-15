@@ -9,6 +9,7 @@ const containerStyle = {
 };
 
 const DESTINATION_CHANGE_FINE = 20; // $20 fine for changing destination
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 function OrderItemCard({ parcel, onCancel, onUpdateDestination }) {
   const [directions, setDirections] = useState(null);

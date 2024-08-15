@@ -4,6 +4,8 @@ import axios from 'axios';
 import '../css/AdminManage.css'; // Import the CSS file
 import {API_BASE_URL} from '../config';
 
+
+
 const AdminManage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ const AdminManage = () => {
       });
 
       alert('Status updated and email notifications sent!');
-      navigate(`${API_BASE_URL}/admin/view-orders`);
+      navigate(`/admin/view-orders`);
     } catch (error) {
       console.error('Error updating parcel status or sending email:', error);
     }
@@ -98,8 +100,8 @@ const AdminManage = () => {
         <div className="navbar-content">
           <div className="navbar-title">Admin Dashboard</div>
           <div className="navbar-nav">
-            <button className="nav-link" onClick={() => navigate(`${API_BASE_URL}/admin/view-orders`)}>View Orders</button>
-            <button className="nav-link active" onClick={() => navigate(`${API_BASE_URL}/admin/manage-orders/${id}`)}>Manage Order</button>
+            <button className="nav-link" onClick={() => navigate(`/admin/view-orders`)}>View Orders</button>
+            <button className="nav-link active" onClick={() => navigate(`/admin/manage-orders/${id}`)}>Manage Order</button>
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>
         </div>

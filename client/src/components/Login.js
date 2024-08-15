@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import '../css/Login.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -44,9 +46,9 @@ function Login({ setActivePage, onSignIn }) {
 
           // Redirect based on admin status
           if (data.user.isAdmin) {
-            navigate(`${API_BASE_URL}/admin/view-orders`);
+            navigate(`/admin/view-orders`);
           } else {
-            navigate(`${API_BASE_URL}/dashboard`);
+            navigate(`/dashboard`);
           }
         } else {
           formik.setStatus(data.message || 'Invalid email or password');

@@ -3,6 +3,8 @@ import OrderItemCard from './carditems/OrderItemCard';
 import '../css/ViewOrders.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
 
 function ViewOrders({ user }) {
   const [parcels, setParcels] = useState([]);
