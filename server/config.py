@@ -38,5 +38,8 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
+# CORS CONFIGURATIONS
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+
 # Instantiate CORS
-CORS(app)
+CORS(app, origins=CORS_ALLOWED_ORIGINS)
