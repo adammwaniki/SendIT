@@ -72,7 +72,7 @@ def check_if_logged_in():
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
 
-app.route('/', defaults={'path': ''})
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
@@ -80,10 +80,16 @@ def serve(path):
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
+
 # This will handle both GET and HEAD requests
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/', methods=['HEAD'])
+def head_index():
+    return '', 200
+
 
 # User resource
 class Signup(Resource):
