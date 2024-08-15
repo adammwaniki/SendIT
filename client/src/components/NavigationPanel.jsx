@@ -3,16 +3,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './NavigationPanel.css';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
 
 const NavigationPanel = ({ activeLink, setActiveLink, setIsUserSignedIn }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
   // Determine if the current route matches the 'Manage Orders' route
-  const isManageOrdersActive = location.pathname.startsWith(`${API_BASE_URL}/admin/manage-orders`);
+  const isManageOrdersActive = location.pathname.startsWith(`/admin/manage-orders`);
   
   // Determine if the current route matches the 'View Orders' route
-  const isViewOrdersActive = location.pathname === `${API_BASE_URL}/admin/view-orders`;
+  const isViewOrdersActive = location.pathname === `/admin/view-orders`;
 
   const handleLogout = async () => {
     try {
@@ -23,7 +25,7 @@ const NavigationPanel = ({ activeLink, setActiveLink, setIsUserSignedIn }) => {
 
       if (response.ok) {
         setIsUserSignedIn(false);
-        navigate(`${API_BASE_URL}/`); // Redirect to login page after successful logout
+        navigate(`/`); // Redirect to login page after successful logout
       } else {
         throw new Error('Logout failed');
       }
@@ -40,7 +42,7 @@ const NavigationPanel = ({ activeLink, setActiveLink, setIsUserSignedIn }) => {
       </div>
       <nav className="nav-links">
         <Link
-          to={`${API_BASE_URL}/admin/view-orders`}
+          to={`/admin/view-orders`}
           className={`nav-link ${isViewOrdersActive ? 'active' : ''}`}
           onClick={() => setActiveLink('View Orders')}
         >

@@ -7,6 +7,7 @@ import '../css/Homepage.css';
 import logo from '../assets/images/favicon.ico';
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
     const [activePage, setActivePage] = useState(initialPage);
@@ -18,7 +19,7 @@ function Homepage({ setIsUserSignedIn, initialPage = 'home' }) {
 
     const handleSignIn = () => {
       setIsUserSignedIn(true);
-      navigate(`${API_BASE_URL}/dashboard`);
+      navigate(`/dashboard`);
     };
 
     const handleRegisterSuccess = () => {

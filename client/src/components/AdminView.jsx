@@ -5,6 +5,8 @@ import debounce from 'lodash/debounce';
 import '../css/AdminView.css'; // Import the CSS file
 import {API_BASE_URL} from '../config';
 
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
 
 const AdminView = () => {
   const [parcels, setParcels] = useState([]);
@@ -62,7 +64,7 @@ const AdminView = () => {
         credentials: 'include' // Include credentials (cookies) with the request
       });
       if (response.ok) {
-        window.location.href = `${API_BASE_URL}/login`; // Redirect to login page after successful logout
+        window.location.href = `/login`; // Redirect to login page after successful logout
       } else {
         throw new Error('Logout failed');
       }
@@ -81,7 +83,7 @@ const AdminView = () => {
         <div className="navbar-content">
           <div className="navbar-title">Admin Dashboard</div>
           <div className="navbar-nav">
-            <Link to={`${API_BASE_URL}/admin/view-orders`} className={`nav-link ${activeLink === 'View Orders' ? 'active' : ''}`}>View Orders</Link>
+            <Link to={`/admin/view-orders`} className={`nav-link ${activeLink === 'View Orders' ? 'active' : ''}`}>View Orders</Link>
             {/* Removed link to Manage Order due to undefined parcel */}
             <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>
@@ -134,7 +136,7 @@ const AdminView = () => {
                   <label>To:</label>
                   <div className="parcel-detail-value-a">{`${parcel.recipient.first_name} ${parcel.recipient.last_name}`}</div>
                 </div>
-                <Link to={`${API_BASE_URL}/admin/manage-orders/${parcel.id}`} className="manage-link">Manage</Link>
+                <Link to={`/admin/manage-orders/${parcel.id}`} className="manage-link">Manage</Link>
               </div>
             </div>
           ))
