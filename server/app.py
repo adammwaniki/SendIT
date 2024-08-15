@@ -43,6 +43,9 @@ app.config['MAIL_DEFAULT_SENDER'] = f'{mail_defaul_sender}'
 # Initialising Flask-Mail
 mail = Mail(app)
 
+# Linking to the build folder in the client
+app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'client', 'build')
+
 def load_user():
     user_id = session.get('user_id')
     if user_id:
@@ -69,21 +72,18 @@ def check_if_logged_in():
             return make_response(jsonify({"message": "Admin access required"}), 403)
 
 
-@app.route('/', defaults={'path': ''})
+app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    if path != "":
-        full_path = os.path.join(app.static_folder, path)
-        if os.path.exists(full_path):
-            #print(f"Serving file from: {full_path}")  # Debug log # commented out because it's returning the correct paths
-            return send_from_directory(app.static_folder, path)
-        #else:
-            #print(f"File not found: {full_path}")  # Debug log
-    return send_from_directory(app.static_folder, 'index.html')
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
+# This will handle both GET and HEAD requests
 @app.route('/')
 def index():
-    return '<h1>Project Server</h1>'
+    return send_from_directory(app.static_folder, 'index.html')
 
 # User resource
 class Signup(Resource):

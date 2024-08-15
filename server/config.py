@@ -39,7 +39,8 @@ db.init_app(app)
 api = Api(app)
 
 # CORS CONFIGURATIONS
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,https://sendit-wkk7.onrender.com').split(',')
 
 # Instantiate CORS
 CORS(app, origins=CORS_ALLOWED_ORIGINS)
+
