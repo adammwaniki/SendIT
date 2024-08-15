@@ -1,5 +1,3 @@
-//export const API_BASE_URL = 'https://sendit-wkk7.onrender.com';
+export const API_BASE_URL = 'https://sendit-wkk7.onrender.com';
 //export const API_BASE_URL = 'http://127.0.0.1:8000';
-export const API_BASE_URL = 'http://0.0.0.0:10000';
-
 export default API_BASE_URL
