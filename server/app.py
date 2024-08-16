@@ -73,10 +73,18 @@ def check_if_logged_in():
 def home():
     return jsonify({"message": "SendIT API is running"}), 200
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "":
+        full_path = os.path.join(app.static_folder, path)
+        if os.path.exists(full_path):
+            print(f"Serving file from: {full_path}")  # Debug log
+            return send_from_directory(app.static_folder, path)
+        else:
+            print(f"File not found: {full_path}")  # Debug log
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/')
-def home():
-    return jsonify({"message": "SendIT API is running"}), 200
 
 
 # User resource
