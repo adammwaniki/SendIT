@@ -85,9 +85,6 @@ def serve(path):
             print(f"File not found: {full_path}")  # Debug log
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/')
-def home():
-    return jsonify({"message": "SendIT API is running"}), 200
 
 
 # User resource
