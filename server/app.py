@@ -159,7 +159,7 @@ class CheckSession(Resource):
                 "last_name": user.last_name,
                 "isAdmin": is_admin
             }
-        return {}, 204
+        return jsonify({"message": "No active session"}), 204
     
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 class Users(Resource):
