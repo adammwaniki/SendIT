@@ -43,7 +43,8 @@ api = Api(app)
 # Instantiate CORS now including explicit definition of allowed methods
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": CORS_ALLOWED_ORIGINS}})
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True)
+#CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True)
+CORS(app, origins=[r"https://.*\.vercel\.app$"], supports_credentials=True, origins_regex=True) # Making use of a regex style structure to be more flexible in handling preview deployments 
 
 
 
