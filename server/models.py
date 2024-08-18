@@ -17,6 +17,20 @@ roles_users = db.Table('roles_users',
     Column('role_id', Integer, ForeignKey('roles.id'))
 )
 
+class Role(db.Model, RoleMixin, SerializerMixin):
+    __tablename__ = 'roles'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), unique=True)
+    
+    # Many-to-many relationship with users
+    users = relationship('User', secondary=roles_users, back_populates='roles')
+
+    serialize_rules = ('-users.roles',)
+
+    def __repr__(self):
+        return f"<Role(id={self.id}, name='{self.name}')>"
+
 class User(db.Model, UserMixin, SerializerMixin):
     __tablename__ = 'users'
     
@@ -69,23 +83,21 @@ class User(db.Model, UserMixin, SerializerMixin):
     
     def check_password(self, password):
         return check_password_hash(self.password, password)
+    
+    @classmethod
+    def create_with_default_role(cls, **kwargs):
+        user = cls(**kwargs)
+        default_role = Role.query.filter_by(name='user').first()
+        if default_role:
+            user.roles.append(default_role)
+        db.session.add(user)
+        db.session.commit()
+        return user
 
     def __repr__(self):
         return f"<User(id={self.id}, first_name='{self.first_name}', last_name='{self.last_name}', email='{self.email}', phone_number='{self.phone_number}')>"
 
-class Role(db.Model, RoleMixin, SerializerMixin):
-    __tablename__ = 'roles'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String(80), unique=True)
-    
-    # Many-to-many relationship with users
-    users = relationship('User', secondary=roles_users, back_populates='roles')
 
-    serialize_rules = ('-users.roles',)
-
-    def __repr__(self):
-        return f"<Role(id={self.id}, name='{self.name}')>"
 
 
 class Recipient(db.Model, SerializerMixin):
