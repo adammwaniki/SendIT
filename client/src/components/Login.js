@@ -103,9 +103,9 @@ function Login({ setActivePage, onSignIn }) {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
 
-          <button type="button" className="forgot-password" onClick={handleForgotPasswordClick}>
+          {/*<button type="button" className="forgot-password" onClick={handleForgotPasswordClick}>
             Forgot Password?
-          </button>
+          </button>*/}
 
           <p className="register-link">
             Don't have an account? <button type="button" onClick={() => setActivePage('register')}>Register</button>
