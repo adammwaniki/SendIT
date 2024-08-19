@@ -99,7 +99,7 @@ class Signup(Resource):
             return {"message": "Email is already in use"}, 400
 
         hashed_password = generate_password_hash(data['password'])
-        new_user = User(
+        new_user = User.create_with_default_role(
             first_name=data['first_name'],
             last_name=data['last_name'],
             email=data['email'],
@@ -151,15 +151,20 @@ class CheckSession(Resource):
     def get(self):
         user = load_user()
         if user:
-            is_admin = any(role.name == 'admin' for role in user.roles)
-            return {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "isAdmin": is_admin
-            }
-        return jsonify({"message": "No active session"}), 204
+            roles = [role.name for role in user.roles]
+            if roles:
+                return {
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "roles": roles,
+                    "isAdmin": 'admin' in roles
+                }
+            else:
+                return {"message": "User has no assigned roles"}, 403
+        return {"message": "No active session"}, 204
+
     
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 class Users(Resource):
