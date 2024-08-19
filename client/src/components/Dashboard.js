@@ -27,6 +27,7 @@ function Dashboard({ setIsUserSignedIn }) {
           credentials: 'include'
         });
         if (!sessionResponse.ok) {
+          const errorText = await sessionResponse.text();
           throw new Error(`Session check failed: ${errorText}`);
         }
         const sessionData = await sessionResponse.json();
