@@ -38,7 +38,8 @@ function Dashboard({ setIsUserSignedIn }) {
           credentials: 'include'
         });
         if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data');
+          const errorText = await userResponse.text();
+          throw new Error(`Session check failed: ${errorText}`);
         }
         const userData = await userResponse.json();
        
