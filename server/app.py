@@ -118,13 +118,9 @@ class Login(Resource):
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
-        
         if user and check_password_hash(user.password, data['password']):
             session['user_id'] = user.id
-            
-            # Check if the user has an admin role
-            is_admin = any(role.name == 'admin' for role in user.roles)
-            
+            roles = [role.name for role in user.roles]
             return {
                 "message": "Login successful",
                 "user": {
@@ -132,11 +128,12 @@ class Login(Resource):
                     "email": user.email,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
-                    "isAdmin": is_admin
+                    "roles": roles,
+                    "isAdmin": 'admin' in roles
                 }
             }, 200
-        
         return {"message": "Invalid credentials"}, 401
+
 
 api.add_resource(Login, '/login', endpoint='login')
 
