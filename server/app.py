@@ -188,8 +188,13 @@ class UsersByID(Resource):
     def get(self, id):
         user_specific = User.query.filter_by(id=id).first()
         if user_specific:
-            return make_response(jsonify(user_specific.to_dict()), 200)
-        return make_response(jsonify({"message": "User not found"}), 404)
+            try:
+                user_data = user_specific.to_dict()
+                return jsonify(user_data), 200
+            except Exception as e:
+                return jsonify({"message": "Error serializing user data", "error": str(e)}), 500
+        return jsonify({"message": "User not found"}), 404
+
 
     def patch(self, id):
         user_specific = User.query.filter_by(id=id).first()
