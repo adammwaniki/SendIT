@@ -39,7 +39,7 @@ function Dashboard({ setIsUserSignedIn }) {
         });
         if (!userResponse.ok) {
           const errorText = await userResponse.text();
-          throw new Error(`Session check failed: ${errorText}`);
+          throw new Error(`Fetching user data failed: ${errorText}`);
         }
         const userData = await userResponse.json();
        
