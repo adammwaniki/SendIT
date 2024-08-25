@@ -20,26 +20,20 @@ function Dashboard({ setIsUserSignedIn }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const sessionResponse = await axios.get(`${API_BASE_URL}/check_session`, {
+        const userId = sessionStorage.getItem('userId'); // making use of session storage until i figure out jwt
+        if (!userId) {
+          throw new Error('User ID not found');
+        }
+    
+        const response = await axios.get(`${API_BASE_URL}/users/${userId}`, {
           withCredentials: true
         });
     
-        console.log('Session response:', sessionResponse.data);
-    
-        if (sessionResponse.data && sessionResponse.data.id) {
-          const userData = await axios.get(`${API_BASE_URL}/users/${sessionResponse.data.id}`, {
-            withCredentials: true
-          });
-          setUser(userData.data);
-          if (!userData.data.roles.includes('user')) {
-            navigate('/dashboard');
-          }
-        } else {
-          throw new Error('Invalid session data');
-        }
+        setUser(response.data);
+        checkUserProfile(response.data);
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setError('Session expired or invalid. Please log in again.');
+        setError(error.message);
         setIsUserSignedIn(false);
         navigate('/login');
       } finally {
