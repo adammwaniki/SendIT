@@ -1,8 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 import '../css/Dashboard.css';
-import {API_BASE_URL} from '../config';
+import { API_BASE_URL } from '../config';
 
 const Profile = lazy(() => import('./Profile'));
 const CreateOrder = lazy(() => import('./CreateOrder'));
@@ -19,31 +20,19 @@ function Dashboard({ setIsUserSignedIn }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const sessionResponse = await fetch(`${API_BASE_URL}/check_session`, {
-          method: 'GET',
-          credentials: 'include'
+        const sessionResponse = await axios.get(`${API_BASE_URL}/check_session`, {
+          withCredentials: true
         });
-        if (!sessionResponse.ok) {
-          const errorText = await sessionResponse.text();
-          throw new Error(`Session check failed: ${errorText}`);
-        }
-        let sessionData = await sessionResponse.json();
-        const userResponse = await fetch(`${API_BASE_URL}/users/${sessionData.id}`, {
-          method: 'GET',
-          credentials: 'include'
+        const userData = await axios.get(`${API_BASE_URL}/users/${sessionResponse.data.id}`, {
+          withCredentials: true
         });
-        if (!userResponse.ok) {
-          const errorText = await userResponse.text();
-          throw new Error(`Fetching user data failed: ${errorText}`);
-        }
-        let userData = await userResponse.json();
-        setUser(userData);
-        if (!userData.roles.includes('user')) {
+        setUser(userData.data);
+        if (!userData.data.roles.includes('user')) {
           navigate('/dashboard');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setError(error.message);
+        setError(error.response?.data?.message || 'An error occurred');
         setIsUserSignedIn(false);
         navigate('/login');
       } finally {
@@ -55,17 +44,11 @@ function Dashboard({ setIsUserSignedIn }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/logout`, {
-        method: 'DELETE',
-        credentials: 'include'
+      await axios.delete(`${API_BASE_URL}/logout`, {
+        withCredentials: true
       });
-
-      if (response.ok) {
-        setIsUserSignedIn(false);
-        navigate('/');
-      } else {
-        throw new Error('Logout failed');
-      }
+      setIsUserSignedIn(false);
+      navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
       alert('Failed to logout. Please try again.');
