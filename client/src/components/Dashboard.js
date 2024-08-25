@@ -17,17 +17,12 @@ function Dashboard({ setIsUserSignedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async (retryCount = 0) => {
+    const fetchUserData = async () => {
       try {
         const sessionResponse = await fetch(`${API_BASE_URL}/check_session`, {
           method: 'GET',
           credentials: 'include'
         });
-    
-        if (sessionResponse.status === 204 && retryCount < 3) {
-          setTimeout(() => fetchUserData(retryCount + 1), 1000);
-          return;
-        }
     
         if (!sessionResponse.ok) {
           const errorText = await sessionResponse.text();
