@@ -41,10 +41,7 @@ function Dashboard({ setIsUserSignedIn }) {
           const errorText = await userResponse.text();
           throw new Error(`Fetching user data failed: ${errorText}`);
         }
-        const userData = await userResponse.json().catch(error => {
-          console.error('Error parsing JSON:', error);
-          throw new Error('Failed to parse user data');
-        });
+        const userData = await userResponse.json();
        
         setUser(userData);
         checkUserProfile(userData);
@@ -56,8 +53,7 @@ function Dashboard({ setIsUserSignedIn }) {
       } finally {
         setIsLoading(false);
       }
-    };
-
+    }
     fetchUserData();
   }, [setIsUserSignedIn, navigate]);
 
