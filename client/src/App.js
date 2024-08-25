@@ -41,16 +41,21 @@ function App() {
     >
       <div className="App">
         <Routes>
+        <Route 
+            path="/"
+            element={isUserSignedIn ? <Navigate to="/dashboard" /> : <Homepage setIsUserSignedIn={setIsUserSignedIn} />}
+          />
           <Route 
-            path={`/`}
-            element={isUserSignedIn ? <Navigate to={`/dashboard`} /> : <Homepage setIsUserSignedIn={setIsUserSignedIn} />}
-          >
-            <Route path="login" element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="login" />} />
-            <Route path="register" element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="register" />} />
-          </Route>
+            path="/login" 
+            element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="login" />} 
+          />
           <Route 
-            path={`/dashboard`} 
-            element={isUserSignedIn ? <Dashboard setIsUserSignedIn={setIsUserSignedIn} /> : <Navigate to={`/login`} />} 
+            path="/register" 
+            element={<Homepage setIsUserSignedIn={setIsUserSignedIn} initialPage="register" />} 
+          />
+          <Route 
+            path="/dashboard" 
+            element={isUserSignedIn ? <Dashboard setIsUserSignedIn={setIsUserSignedIn} /> : <Navigate to="/login" />} 
           />
           {/* New Admin Routes */}
           <Route 
