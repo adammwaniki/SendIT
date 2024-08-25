@@ -129,7 +129,8 @@ class Login(Resource):
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "roles": roles,
-                    "isAdmin": 'admin' in roles
+                    "isAdmin": 'admin' in roles,
+                    "isUser": 'user' in roles
                 }
             }, 200
         return {"message": "Invalid credentials"}, 401
