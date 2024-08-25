@@ -42,6 +42,7 @@ function Login({ setActivePage, onSignIn }) {
 
         if (response.ok) {
           console.log('Login successful:', data);
+          sessionStorage.setItem('userId', data.user.id); // making use of session storage before i figure out jwt
           onSignIn();
 
           // Redirect based on admin status
