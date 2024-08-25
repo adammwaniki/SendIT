@@ -150,20 +150,20 @@ class CheckSession(Resource):
         user = load_user()
         if user:
             roles = [role.name for role in user.roles]
-            if roles:
-                return {
+            return {
+                "message": "Session active",
+                "user": {
                     "id": user.id,
                     "email": user.email,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "roles": roles,
-                    "isAdmin": 'admin' in roles
+                    "isAdmin": 'admin' in roles,
+                    "isUser": 'user' in roles
                 }
-            else:
-                return {"message": "User has no assigned roles"}, 403
+            }, 200
         return {"message": "No active session"}, 204
 
-    
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 class Users(Resource):
     def get(self):
