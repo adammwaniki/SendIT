@@ -23,22 +23,30 @@ function Dashboard({ setIsUserSignedIn }) {
         const sessionResponse = await axios.get(`${API_BASE_URL}/check_session`, {
           withCredentials: true
         });
-        const userData = await axios.get(`${API_BASE_URL}/users/${sessionResponse.data.id}`, {
-          withCredentials: true
-        });
-        setUser(userData.data);
-        if (!userData.data.roles.includes('user')) {
-          navigate('/dashboard');
+    
+        console.log('Session response:', sessionResponse.data);
+    
+        if (sessionResponse.data && sessionResponse.data.id) {
+          const userData = await axios.get(`${API_BASE_URL}/users/${sessionResponse.data.id}`, {
+            withCredentials: true
+          });
+          setUser(userData.data);
+          if (!userData.data.roles.includes('user')) {
+            navigate('/dashboard');
+          }
+        } else {
+          throw new Error('Invalid session data');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setError(error.response?.data?.message || 'An error occurred');
+        setError('Session expired or invalid. Please log in again.');
         setIsUserSignedIn(false);
         navigate('/login');
       } finally {
         setIsLoading(false);
       }
     };
+    
     fetchUserData();
   }, [setIsUserSignedIn, navigate]);
 
