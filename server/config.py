@@ -44,8 +44,15 @@ api = Api(app)
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": CORS_ALLOWED_ORIGINS}})
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 #CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True)
-CORS(app, origins=[r"https://.*\.vercel\.app$"], supports_credentials=True, origins_regex=True) # Making use of a regex style structure to be more flexible in handling preview deployments 
+CORS(app, origins=[r"https://.*\.vercel\.app$"], supports_credentials=True, origins_regex=True, expose_headers=['Set-Cookie']) # Making use of a regex style structure to be more flexible in handling preview deployments 
 
-
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://send-it-eight.vercel.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Expose-Headers', 'Set-Cookie')
+    return response
 
 
