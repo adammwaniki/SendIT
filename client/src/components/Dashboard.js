@@ -23,13 +23,11 @@ function Dashboard({ setIsUserSignedIn }) {
           method: 'GET',
           credentials: 'include'
         });
-    
         if (!sessionResponse.ok) {
           const errorText = await sessionResponse.text();
           throw new Error(`Session check failed: ${errorText}`);
         }
         let sessionData = await sessionResponse.json();
-    
         const userResponse = await fetch(`${API_BASE_URL}/users/${sessionData.id}`, {
           method: 'GET',
           credentials: 'include'
@@ -39,10 +37,9 @@ function Dashboard({ setIsUserSignedIn }) {
           throw new Error(`Fetching user data failed: ${errorText}`);
         }
         let userData = await userResponse.json();
-    
         setUser(userData);
-        if (userData.roles.includes('admin')) {
-          navigate('/admin/view-orders');
+        if (!userData.roles.includes('user')) {
+          navigate('/dashboard');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -53,7 +50,6 @@ function Dashboard({ setIsUserSignedIn }) {
         setIsLoading(false);
       }
     };
-    
     fetchUserData();
   }, [setIsUserSignedIn, navigate]);
 
