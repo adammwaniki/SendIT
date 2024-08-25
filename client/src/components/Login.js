@@ -47,7 +47,7 @@ function Login({ setActivePage, onSignIn }) {
           // Redirect based on admin status
           if (data.user.isAdmin) {
             navigate(`/admin/view-orders`);
-          } else {
+          } else if (data.user.isUser){
             navigate(`/dashboard`);
           }
         } else {
