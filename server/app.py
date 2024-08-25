@@ -147,24 +147,27 @@ api.add_resource(Logout, '/logout', endpoint='logout')
 
 class CheckSession(Resource):
     def get(self):
-        user = load_user()
-        if user:
-            roles = [role.name for role in user.roles]
-            return {
-                "message": "Session active",
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "roles": roles,
-                    "isAdmin": 'admin' in roles,
-                    "isUser": 'user' in roles
-                }
-            }, 200
+        user_id = session.get('user_id')
+        if user_id:
+            user = User.query.get(int(user_id))
+            if user:
+                roles = [role.name for role in user.roles]
+                return {
+                    "message": "Session active",
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "roles": roles,
+                        "isAdmin": 'admin' in roles,
+                        "isUser": 'user' in roles
+                    }
+                }, 200
         return {"message": "No active session"}, 204
 
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
+
 class Users(Resource):
     def get(self):
         response_dict_list = [user.to_dict() for user in User.query.all()]
