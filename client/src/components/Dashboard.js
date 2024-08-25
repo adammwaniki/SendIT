@@ -19,19 +19,32 @@ function Dashboard({ setIsUserSignedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    // Implementing a retry mechanism with a delay to allow a session to be properly established
+    const fetchUserData = async (retryCount = 0) => {
       try {
-        // Step 1: Check session
         const sessionResponse = await fetch(`${API_BASE_URL}/check_session`, {
           method: 'GET',
           credentials: 'include'
         });
+    
+        if (sessionResponse.status === 204 && retryCount < 3) {
+          // If no content and we haven't reached max retries, wait and try again
+          setTimeout(() => fetchUserData(retryCount + 1), 1000);
+          return;
+        }
+    
         if (!sessionResponse.ok) {
           const errorText = await sessionResponse.text();
           throw new Error(`Session check failed: ${errorText}`);
         }
-        const sessionData = await sessionResponse.json();
-       
+        let sessionData;
+        try {
+          sessionData = await sessionResponse.json();
+        } catch (jsonError) {
+          console.error('Error parsing session JSON:', jsonError);
+          throw new Error('Failed to parse session data');
+        }
+    
         // Step 2: Fetch full user data
         const userResponse = await fetch(`${API_BASE_URL}/users/${sessionData.id}`, {
           method: 'GET',
@@ -41,8 +54,14 @@ function Dashboard({ setIsUserSignedIn }) {
           const errorText = await userResponse.text();
           throw new Error(`Fetching user data failed: ${errorText}`);
         }
-        const userData = await userResponse.json();
-       
+        let userData;
+        try {
+          userData = await userResponse.json();
+        } catch (jsonError) {
+          console.error('Error parsing user JSON:', jsonError);
+          throw new Error('Failed to parse user data');
+        }
+    
         setUser(userData);
         checkUserProfile(userData);
       } catch (error) {
@@ -53,7 +72,8 @@ function Dashboard({ setIsUserSignedIn }) {
       } finally {
         setIsLoading(false);
       }
-    }
+    };
+    
     fetchUserData();
   }, [setIsUserSignedIn, navigate]);
 
