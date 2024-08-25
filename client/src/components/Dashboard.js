@@ -30,7 +30,7 @@ function Dashboard({ setIsUserSignedIn }) {
         });
     
         setUser(response.data);
-        checkUserProfile(response.data);
+        
       } catch (error) {
         console.error('Error fetching user data:', error);
         setError(error.message);
