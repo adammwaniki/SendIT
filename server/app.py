@@ -190,16 +190,16 @@ api.add_resource(Users, '/users')
 
 class UsersByID(Resource):
     def get(self, id):
-        try:
-            user_specific = User.query.filter_by(id=id).first()
-            if user_specific:
+        user_specific = User.query.filter_by(id=id).first()
+        if user_specific:
+            try:
                 user_data = user_specific.to_dict()
-                return jsonify(user_data), 200
-            else:
-                return jsonify({"message": "User not found"}), 404
-        except Exception as e:
-            app.logger.error(f"Error retrieving user {id}: {str(e)}")
-            return jsonify({"message": "Error retrieving user data", "error": str(e)}), 500
+                return user_data, 200
+            except Exception as e:
+                app.logger.error(f"Error serializing user data: {str(e)}")
+                return {"message": "Error serializing user data", "error": str(e)}, 500
+        return {"message": "User not found"}, 404
+
 
     def patch(self, id):
         user_specific = User.query.filter_by(id=id).first()
