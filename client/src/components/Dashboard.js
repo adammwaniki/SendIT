@@ -20,7 +20,7 @@ function Dashboard({ setIsUserSignedIn }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userId = sessionStorage.getItem('userId'); // making use of session storage until i figure out jwt
+        const userId = sessionStorage.getItem('userId');
         if (!userId) {
           throw new Error('User ID not found');
         }
@@ -30,6 +30,7 @@ function Dashboard({ setIsUserSignedIn }) {
         });
     
         setUser(response.data);
+        checkUserProfile(response.data);
         
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -44,42 +45,71 @@ function Dashboard({ setIsUserSignedIn }) {
     fetchUserData();
   }, [setIsUserSignedIn, navigate]);
 
+  const checkUserProfile = (userData) => {
+    const requiredFields = ['phone_number', 'city', 'street', 'country', 'state', 'zip_code'];
+    const hasIncompleteProfile = requiredFields.some(field => !userData[field]);
+    if (hasIncompleteProfile) {
+      setActiveLink('Profile');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await axios.delete(`${API_BASE_URL}/logout`, {
         withCredentials: true
       });
+      sessionStorage.removeItem('userId');
       setIsUserSignedIn(false);
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Error logging out:', error);
-      alert('Failed to logout. Please try again.');
+      setError('Failed to logout. Please try again.');
     }
   };
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  const renderActiveComponent = () => {
+    const components = {
+      'Get a Quote': GetQuote,
+      'Create Order': CreateOrder,
+      'View Orders': ViewOrders,
+      'Profile': Profile
+    };
+    const Component = components[activeLink];
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Component user={user} setUser={setUser} />
+      </Suspense>
+    );
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>An error occurred: {error}</div>;
+  if (!user) return <div>No user data available</div>;
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1 className="dashboard-title">Welcome to <span className="highlight">SendIT</span></h1>
+      <header className="dashboard-header">
+        <h1 className="dashboard-title">
+          <span className="highlight">SendIT</span> Dashboard
+        </h1>
         <nav className="dashboard-nav">
-          <button className={`nav-link ${activeLink === 'Get a Quote' ? 'active' : ''}`} onClick={() => setActiveLink('Get a Quote')}>Get a Quote</button>
-          <button className={`nav-link ${activeLink === 'Create Order' ? 'active' : ''}`} onClick={() => setActiveLink('Create Order')}>Create Order</button>
-          <button className={`nav-link ${activeLink === 'View Orders' ? 'active' : ''}`} onClick={() => setActiveLink('View Orders')}>View Orders</button>
-          <button className="logout-button" onClick={handleLogout}>Logout</button>
+          {['Get a Quote', 'Create Order', 'View Orders', 'Profile'].map((link) => (
+            <button
+              key={link}
+              className={`nav-link ${activeLink === link ? 'active' : ''}`}
+              onClick={() => setActiveLink(link)}
+            >
+              {link}
+            </button>
+          ))}
+          <button className="logout-button" onClick={handleLogout}>
+            Logout
+          </button>
         </nav>
-      </div>
-
-      <div className="dashboard-content">
-        <Suspense fallback={<div>Loading...</div>}>
-          {activeLink === 'Get a Quote' && <GetQuote />}
-          {activeLink === 'Create Order' && <CreateOrder />}
-          {activeLink === 'View Orders' && <ViewOrders />}
-        </Suspense>
-        <Profile user={user} />
-      </div>
+      </header>
+      <main className="dashboard-content">
+        {renderActiveComponent()}
+      </main>
     </div>
   );
 }
