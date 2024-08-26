@@ -50,7 +50,7 @@ CORS(app,
      supports_credentials=True, 
      origins_regex=True,
      allow_headers=['Content-Type', 'Authorization'],
-     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     methods=['*'],
      expose_headers=['Set-Cookie'])
 
 @app.after_request
@@ -59,7 +59,7 @@ def after_request(response):
     if origin and re.match(r"https://.*\.vercel\.app$", origin): # This allows handling of the preview deployments
         response.headers.add('Access-Control-Allow-Origin', origin)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Methods', '*')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Expose-Headers', 'Set-Cookie')
     return response
