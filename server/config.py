@@ -3,7 +3,7 @@
 # Standard library imports
 
 # Remote library imports
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
@@ -44,8 +44,14 @@ api = Api(app)
 # Instantiate CORS now including explicit definition of allowed methods
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": CORS_ALLOWED_ORIGINS}})
 #CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-#CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True)
-CORS(app, origins=[r"https://.*\.vercel\.app$"], supports_credentials=True, origins_regex=True, expose_headers=['Set-Cookie']) # Making use of a regex style structure to be more flexible in handling preview deployments 
+#CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True) origins_regex=True,
+CORS(app, 
+     origins=[r"https://.*\.vercel\.app$"], 
+     supports_credentials=True, 
+     origins_regex=True,
+     allow_headers=['Content-Type', 'Authorization'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     expose_headers=['Set-Cookie'])
 
 @app.after_request
 def after_request(response):
