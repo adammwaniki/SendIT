@@ -14,20 +14,18 @@ import os
 import re
 
 load_dotenv()
+
 # Local imports
 
 # Environment attributes
 DATABASE_URI = os.getenv("DATABASE_URI")
-#CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # Instantiate app, set attributes
 app = Flask(__name__)
-# In production it is preferable to use a fixed and securely generated secret key instead of a random one each time the server restarts.
-app.config['SECRET_KEY'] = os.urandom(24) # This will generate a random 24bit secret key
+app.config['SECRET_KEY'] = os.urandom(24)  # This will generate a random 24bit secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = f'{DATABASE_URI}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
-
 
 # Define metadata, instantiate db
 metadata = MetaData(naming_convention={
@@ -40,28 +38,20 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
-
-# Instantiate CORS now including explicit definition of allowed methods
-#CORS(app, supports_credentials=True, resources={r"/*": {"origins": CORS_ALLOWED_ORIGINS}})
-#CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-#CORS(app, origins=['https://send-it-eight.vercel.app'], supports_credentials=True) origins_regex=True,
-CORS(app, 
-     origins=[r"https://.*\.vercel\.app$"], 
-     supports_credentials=True, 
+# Instantiate CORS with updated configuration
+CORS(app,
+     origins=[r"https://.*\.vercel\.app$", "https://send-it-eight.vercel.app"],
+     supports_credentials=True,
      origins_regex=True,
      allow_headers=['Content-Type', 'Authorization'],
-     methods=['*'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
      expose_headers=['Set-Cookie'])
 
 @app.after_request
 def after_request(response):
-    #origin = request.headers.get('Origin')
-    #if origin and re.match(r"https://.*\.vercel\.app$", origin): # This allows handling of the preview deployments
-    #    response.headers.add('Access-Control-Allow-Origin', origin)
-    #response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', '*')
-    #response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Expose-Headers', 'Set-Cookie')
     return response
-
-
